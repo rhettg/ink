@@ -6,7 +6,7 @@
 # for you.
 set -u
 set -o pipefail
-set -x
+#set -x
 
 # Fun Globals to keep track of
 name=""
@@ -163,21 +163,6 @@ init () {
   exit_repo
 }
 
-# Run create on an existing ink stack
-create () {
-  enter_repo
-
-  if run_script "ink-create"; then
-    git add -A .
-    if ! git commit -q --allow-empty -m "ink create"; then
-      err "Failed to commit ink create"
-      exit 1
-    fi
-  fi
-
-  exit_repo
-}
-
 # Shutdown and remove an existing ink stack
 destroy () {
   enter_repo
@@ -208,41 +193,72 @@ destroy () {
   fi
 }
 
+
+# Handle all our standard actions that just call the associated user script and
+# commit any changes.
+action () {
+  cmd=$1
+
+  enter_repo
+
+  if run_script "ink-${cmd}"; then
+    git add -A .
+    if ! git commit -q --allow-empty -m "ink ${cmd}"; then
+      err "Failed to commit ink ${cmd}"
+      exit 1
+    fi
+  fi
+
+  exit_repo
+}
+
+# Handle all our standard queries that just call the associated user script and
+# return the results
+query () {
+  cmd=$1
+
+  enter_repo
+
+  run_script "ink-${cmd}"
+
+  exit_repo
+}
+
 # Log an error
 err () {
   >&2 echo $1
 }
 
+
 if [ $# -eq 0 ] || [ "$1" == "help" ]; then
   help
-elif [ "$1" == "init" ]; then
-  if [ $# -lt 2 ]; then
-    err "init where?"
-    help
-  else
-    init $2
-  fi
-elif [ "$1" == "create" ]; then
-  if [ $# -lt 2 ]; then
-    err "create what?"
-    help
-  else
-    name=$2
-    create
-  fi
-elif [ "$1" == "update" ]; then
-    echo
-elif [ "$1" == "destroy" ]; then
-  if [ $# -lt 2 ]; then
-    err "destroy what?"
-    help
-  else
-    name=$2
-    destroy
-  fi
-else
-    >&2 echo "Unknown command"
-    help
 fi
+
+if [ $# -lt 2 ]; then
+  err "${$1} what?"
+  help
+fi
+
+case $1 in
+init)
+  init $2
+  ;;
+destroy)
+  name=$2
+  destroy
+  ;;
+create|update|plan)
+  name=$2
+  action "$1"
+  ;;
+show)
+  name=$2
+  query "$1"
+  ;;
+*)
+  err "Unknown command"
+  help
+  ;;
+esac
 
 exit $exit_ret

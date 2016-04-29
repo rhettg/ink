@@ -6,7 +6,6 @@ repo="test_repo"
 
 . $(dirname $0)/util.sh
 
-
 enter_repo ${repo}
 
 name=$(ink init .)

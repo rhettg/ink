@@ -18,7 +18,7 @@ EOF
   chmod +x script/ink-create
 
   git add script
-  git commit -m "added create script"
+  git commit -q -m "added create script"
 
   name=$(ink init .)
   ink create ${name}
@@ -29,7 +29,7 @@ EOF
     exit 1
   fi
 
-  if ! git log --oneline | head -1 | grep "ink create"; then
+  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
     err "Failed to find create commit"
     git log --oneline
     exit 1
@@ -49,10 +49,10 @@ EOF
   chmod +x script/ink-create
 
   git add script
-  git commit -m "added create script"
+  git commit -q -m "added create script"
 
   name=$(ink init .)
-  if ink create ${name}; then
+  if ink create ${name} &>/dev/null; then
     err "Create should have failed"
     exit 1
   fi
@@ -63,7 +63,7 @@ EOF
     exit 1
   fi
 
-  if git log ${name} --oneline | head -1 | grep "ink create"; then
+  if git log ${name} --oneline | head -1 | grep "ink create" > /dev/null; then
     err "Found create commit after failure"
     git log --oneline
     exit 1
