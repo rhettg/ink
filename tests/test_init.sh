@@ -73,6 +73,7 @@ init_remote () {
     err "Failed to find ink file"
     exit 1
   fi
+  cd ..
 
   exit_remote
 }
