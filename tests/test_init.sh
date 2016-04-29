@@ -2,6 +2,7 @@
 set -e
 
 PATH=$(dirname $0)/../:$PATH
+repo="test_repo"
 
 err () {
   echo $1 >&2
@@ -11,8 +12,8 @@ if [ -d test_create ]; then
   rm -rf test_create
 fi
 
-mkdir test_create
-cd test_create
+mkdir ${repo}
+cd ${repo}
 git init -q .
 git commit -q --allow-empty -m "initial commit"
 
@@ -36,4 +37,4 @@ if [ ! -f .ink ]; then
 fi
 
 cd ..
-rm -rf test_create
+rm -rf ${repo}
