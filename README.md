@@ -121,4 +121,5 @@ Boom, checkout [examples/](examples/) for more.
   - [ ] Populate meta-data in `.ink`
   - [ ] Ink prefix for branch name
   - [ ] TTL
+  - [ ] Annotations, like `-m "more instances"`
   - [ ] Work on some provisioner integrations
