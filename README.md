@@ -1,4 +1,4 @@
-# INK
+# Ink
 
 Ink is an abstraction layer and git-powered tooling around infrastructure provisioning.
 
@@ -56,13 +56,13 @@ the operation will stop.
   * `script/ink-create`
   * `script/ink-update`
   * `script/ink-plan`
-  * `script/ink-resources`
+  * `script/ink-show`
   * `script/ink-destroy`
 
 
 ## How it works
 
-Ink is based on git-repositories. Ink calls hooks inside the repo to abstract
+Ink is based on git repositories. Ink calls hooks inside the repo to abstract
 away the real tooling that will make infrastructure changes. The revision
 history of the repository then becomes the revision history of your
 infrastructure.
@@ -70,7 +70,7 @@ infrastructure.
 Each Ink stack is a branch in your repository. For example, let's say you
 create a new stack based on your octobatman repository:
 
-    > ink init git@github.com:github/octobatman.git
+    $ ink init git@github.com:github/octobatman.git
     octobatman-d88f7
 
 If you check your repository, you'll see one very important thing: A new branch
@@ -104,3 +104,13 @@ This command will then:
   2. Merge in origin/master
   3. Execute your own script `script/ink-update`
   4. Commit any changes and push to origin.
+
+## The Provisioners
+
+I can already hear you saying it. "Ugh, this doesn't actually DO anything".
+You're right, ink is basically just calling some scripts that you have to write
+and wrapping them around some simple git operations.
+
+BUT... what if I told you the scripts for those provisioners already existed!
+
+Boom, checkout [examples/](examples/) for more.

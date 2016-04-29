@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "Creating stack ${INK_NAME}"
+
+date > state.db
