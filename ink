@@ -37,6 +37,8 @@ extract_repo_name () {
 
   if [[ "$1" =~ $regex ]]; then
     echo "${BASH_REMATCH[1]}"
+  else
+    echo $(basename $1)
   fi
 }
 
@@ -120,6 +122,7 @@ init () {
     repo=$(extract_repo_name "${remote}")
     if [ -z $repo ]; then
       err "Failed to extract name from ${remote}"
+      exit 1
     fi
   fi
 
@@ -129,7 +132,7 @@ init () {
     # We actually keep a separate repo for each stack.
     # We could combine stacks for the same repo, but we'd have to sort out
     # concurrency issues. Doable. But skipping for now.
-    git clone -q ${remote} ${name}
+    git clone -q -- ${remote} ${name}
   fi
 
   enter_repo
