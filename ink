@@ -242,6 +242,17 @@ query () {
   exit_repo
 }
 
+# List available stacks
+show_stacks () {
+  if [ -d .git ]; then
+    git branch --no-column --no-color --list "$(basename `pwd`)*" | cut -c 3-
+  else
+    for is in $( find . -type d -maxdepth 1 \( ! -name ".*" \)); do
+      echo $(basename ${is})
+    done
+  fi
+}
+
 # Log an error
 err () {
   >&2 echo $1
@@ -255,8 +266,13 @@ if [ $# -eq 0 ] || [ "$1" == "help" ]; then
 fi
 
 if [ $# -lt 2 ]; then
-  err "${$1} what?"
-  help
+  if [[ $1 == "show" ]]; then
+    show_stacks
+    exit $exit_ret
+  else
+    err "${$1} what?"
+    help
+  fi
 fi
 
 case $1 in
