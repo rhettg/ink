@@ -3,12 +3,21 @@
 set -eu
 set -o pipefail
 
+# Fun Globals to keep track of
+name=""
+
+# These keep track of if we're running in local repo mode, meaning we're being
+# executed from within a repo and won't be managing the remotes or cloning
+# ourselves.
+start_branch=""
+local_repo=0
+
 help () {
   echo "Usage: $0 <init|create|update|show|destroy|help>"
 }
 
 build_name () {
-  id=$(head /dev/urandom | md5sum | cut -c1-5)
+  local id=$(head /dev/urandom | md5sum | cut -c1-5)
   echo "$1-$id"
 }
 
@@ -17,40 +26,72 @@ branch_name () {
 }
 
 extract_repo_name () {
-  regex="([^\/]+)\.git$"
+  local regex="([^\/]+)\.git$"
 
   if [[ "$1" =~ $regex ]]; then
     echo "${BASH_REMATCH[1]}"
   fi
 }
 
+# Handle entering and exiting our repo/branch environment
+# In local mode, we need to much with the current repo, and we want to restore
+# it to how we found it.
+# In remote mode, we'll be cd'ing into a specific repo, and we should come back
+# out when we're done.
+enter_repo () {
+  if [ $local_repo -eq 1 ]; then
+    start_branch=$(git rev-parse --abbrev-ref HEAD)
+  else
+    pushd ${name} &> /dev/null
+  fi
+}
+
+exit_repo () {
+  if [ -n "${start_branch}" ]; then
+    git checkout -q "${start_branch}"
+  else
+    popd &> /dev/null
+  fi
+}
+
+run_script () {
+  local script_name=$1
+
+  if [ -x script/${script_name} ]; then
+    if [ ! script/${script_name} ]; then
+      ret=$?
+      err "Failed executing ${script_name}"
+      exit $ret
+    fi
+  fi
+}
+
 # Initialize the specified git repository for use with a new ink stack
 # This will mean cutting a new branch and putting all the right stuff in it.
 init () {
-  remote=$1
+  # heh
+  local remote=$1
+
   if [ "${remote}" == "." ]; then
     repo=$(basename `pwd`)
-    local=1
+    local_repo=1
   else
     repo=$(extract_repo_name "${remote}")
     if [ -z $repo ]; then
       err "Failed to extract name from ${remote}"
     fi
-
-    local=0
   fi
 
   name=$(build_name "${repo}")
 
-  if [ $local -ne 1 ]; then
+  if [ $local_repo -ne 1 ]; then
     # We actually keep a separate repo for each stack.
     # We could combine stacks for the saem repo, but we'd have to sort out
     # concurrency issues. Doable. But skipping for now.
     git clone -q ${remote} ${name}
-    pushd ${name} &> /dev/null
-  else
-    start_branch=$(git rev-parse --abbrev-ref HEAD)
   fi
+
+  enter_repo
 
   if ! _=$(git status); then
     err "Not a git repository"
@@ -71,20 +112,13 @@ init () {
   git add .ink
   git commit -q -m "ink init"
 
-  if [ -x script/ink-init ]; then
-    if [ ! script/ink-init ]; then
-      ret=$?
-      err "Failed executing ink-init"
-      exit $ret
-    fi
+  run_script "ink-init"
+
+  if [ $local_repo -ne 1 ]; then
+    git push -q -u origin "${name}" &> /dev/null
   fi
 
-  if [ $local -ne 1 ]; then
-    git push -q -u origin "${name}" &> /dev/null
-    popd &> /dev/null
-  else
-    git checkout -q "${start_branch}"
-  fi
+  exit_repo
 
   echo "${name}"
 }
@@ -97,37 +131,31 @@ destroy () {
   name="${1}"
 
   if [ -d .git ]; then
-    local=1
-    start_branch=$(git rev-parse --abbrev-ref HEAD)
-  elif [ -d "${name}" ]; then
-    local=0
-    pushd "${name}" &> /dev/null
-  else
+    local_repo=1
+  elif [ ! -d "${name}" ]; then
     echo "Ink ${name} does not exist"
     exit 1
   fi
 
+  enter_repo
+
   git fetch -q origin
-  git checkout -q "${name}"
-  if [ $local -ne 1 ]; then
+  if [ $local_repo -ne 1 ]; then
     git pull -q
   fi
 
-  if [ -x script/ink-destroy ]; then
-    if [ ! script/ink-destroy ]; then
-      ret=$?
-      err "Failed executing ink-destroy"
-      exit $ret
-    fi
-  fi
+  run_script "ink-destroy"
 
-  if [ $local -ne 1 ]; then
+  if [ $local_repo -ne 1 ]; then
     git push -q origin :"${name}"
     git fetch -q --prune
-    popd &> /dev/null
+  fi
+
+  exit_repo
+
+  if [ $local_repo -ne 1 ]; then
     rm -rf "${name}"
   else
-    git checkout -q ${start_branch}
     git branch -q -D ${name}
   fi
 }
