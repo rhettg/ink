@@ -34,11 +34,7 @@ init_local () {
 init_remote () {
   enter_remote
 
-  mkdir A
-  cd A
-  git init -q .
-  git commit -q --allow-empty -m "initial commit"
-  cd ..
+  build_repo "A"
 
   name=$(ink init ./A)
   if [ -z $name ]; then

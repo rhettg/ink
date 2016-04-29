@@ -36,3 +36,13 @@ exit_remote () {
 
   rm -rf ./$remote
 }
+
+build_repo () {
+  local repo=$1
+  mkdir ${repo}
+
+  cd ${repo}
+  git init -q .
+  git commit -q --allow-empty -m "initial commit for ${repo}"
+  cd ..
+}
