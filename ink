@@ -57,6 +57,9 @@ enter_repo () {
 
   if [ $local_repo -eq 1 ]; then
     start_branch=$(git rev-parse --abbrev-ref HEAD)
+
+    # Our working branch *might* already exist
+    git checkout -q ${name} &>/dev/null || true
   else
     pushd ${name} &> /dev/null
     if ! git fetch -q origin; then
@@ -64,14 +67,22 @@ enter_repo () {
       exit 1
     fi
 
-    if ! git pull -q; then
-      err "Failed to pull changes from origin"
-      exit 1
+    if git checkout -q ${name} &>/dev/null; then
+      # We alway stay up to date with our master, auto merging if necessary
+      if git diff origin/master | grep diff >/dev/null; then
+        if ! git merge --no-ff -q -m "Ink auto-merge origin/master into ${name}" origin/master; then
+          git merge --abort
+          err "Failed to merge with origin"
+          exit 1
+        fi
+      fi
+    else
+      # We don't have an ink branch, let's just make sure master is up to do date
+      git checkout -q master
+      git pull -q --ff-only
     fi
   fi
 
-  # Our working branch *might* already exist
-  git checkout -q ${name} &>/dev/null || true
 }
 
 exit_repo () {
@@ -201,7 +212,6 @@ destroy () {
   fi
 }
 
-
 # Handle all our standard actions that just call the associated user script and
 # commit any changes.
 action () {
@@ -257,11 +267,11 @@ destroy)
   name=$2
   destroy
   ;;
-create|update|plan)
+update|create)
   name=$2
   action "$1"
   ;;
-show)
+show|plan)
   name=$2
   query "$1"
   ;;

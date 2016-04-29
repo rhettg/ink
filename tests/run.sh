@@ -9,6 +9,7 @@ for tf in $( ls ${test_path}/test_*.sh ); do
     echo "Ok"
   else
     echo "Failed"
+    ret=1
   fi
 done
 

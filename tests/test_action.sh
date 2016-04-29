@@ -72,5 +72,105 @@ EOF
   exit_repo ${repo}
 }
 
+remote_success_script () {
+  enter_remote
+  build_repo "A"
+
+  cd A
+
+  mkdir -p script
+
+  cat <<EOF > script/ink-create
+#!/bin/bash
+date > state.db
+EOF
+  chmod +x script/ink-create
+
+  git add script
+  git commit -q -m "added create script"
+
+  cd ..
+
+  name=$(ink init ./A)
+  ink create ${name}
+
+  cd ${name}
+
+  git checkout -q ${name}
+  if [ ! -f state.db ]; then
+    err "Create didn't run"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
+    err "Failed to find create commit"
+    git log --oneline
+    exit 1
+  fi
+
+  if git log --oneline ${name} | grep "Ink auto-merge" >/dev/null; then
+    err "Found auto-merge, should have no changes"
+    git log --oneline
+    exit 1
+  fi
+
+  cd ../A
+  git checkout -q ${name}
+
+  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
+    err "Failed to find create commit in origin"
+    git log --oneline
+    exit 1
+  fi
+
+  cd ..
+
+  exit_remote
+}
+
+# Verifying that our action merges in updates from origin
+remote_merge () {
+  enter_remote
+  build_repo "A"
+  name=$(ink init ./A)
+
+  cd A
+
+  mkdir -p script
+
+  cat <<EOF > script/ink-create
+#!/bin/bash
+date > state.db
+EOF
+  chmod +x script/ink-create
+
+  git add script
+  git commit -q -m "added create script"
+
+  cd ..
+
+  ink create ${name}
+
+  cd ${name}
+
+  git checkout -q ${name}
+  if [ ! -f state.db ]; then
+    err "Create didn't run"
+    exit 1
+  fi
+
+  if ! git log --oneline ${name} | grep "Ink auto-merge" >/dev/null; then
+    err "Failed to find merge commit"
+    git log --oneline
+    exit 1
+  fi
+
+  cd ..
+
+  exit_remote
+}
+
 success_script
 failed_script
+remote_success_script
+remote_merge
