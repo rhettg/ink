@@ -114,3 +114,10 @@ and wrapping them around some simple git operations.
 BUT... what if I told you the scripts for those provisioners already existed!
 
 Boom, checkout [examples/](examples/) for more.
+
+## TODO
+
+  - [ ] Populate meta-data in `.ink`
+  - [ ] Ink prefix for branch name
+  - [ ] TTL
+  - [ ] Work on some provisioner integrations
