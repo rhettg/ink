@@ -4,18 +4,10 @@ set -e
 PATH=$(dirname $0)/../:$PATH
 repo="test_repo"
 
-err () {
-  echo $1 >&2
-}
+. $(dirname $0)/util.sh
 
-if [ -d test_create ]; then
-  rm -rf test_create
-fi
 
-mkdir ${repo}
-cd ${repo}
-git init -q .
-git commit -q --allow-empty -m "initial commit"
+enter_repo ${repo}
 
 name=$(ink init .)
 if [ -z $name ]; then
@@ -36,5 +28,4 @@ if [ ! -f .ink ]; then
   exit 1
 fi
 
-cd ..
-rm -rf ${repo}
+exit_repo ${repo}

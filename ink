@@ -139,8 +139,8 @@ destroy () {
 
   enter_repo
 
-  git fetch -q origin
   if [ $local_repo -ne 1 ]; then
+    git fetch -q origin
     git pull -q
   fi
 
