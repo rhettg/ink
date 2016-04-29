@@ -30,7 +30,8 @@ ink inside this path and you're good to go.
 
 Ok fine, you can run this on your laptop in your development environment if you want.
 
-The difference is going to be you are going to manage the clone of the repo yourself.
+The difference is going to be you are going to manage the clone of the repo
+yourself. Ink is also going to ignore if the repo has a remote at all.
 
 Run ink from inside the repository. You might need to start with:
 
@@ -84,7 +85,7 @@ in our branch and again calling hooks.
 This command will:
 
   1. Verify our branch `octobatman-d88f7` is at HEAD
-  2. Create a new file in that branch called `.ink.yaml`
+  2. Create a new file in that branch called `.ink`
   3. Execute your own script `script/ink-create`
   4. Commit any changes and push to origin.
 

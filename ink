@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# OMG BASH?!? WTF
+# Ok, bare with me, yes this is probably the most advanced bash script I've
+# ever written, and I kinda just wanted to see if I could do it. BUT, it's also
+# really pretty simple because all we're really doing is building a workflow
+# around git. We have to run some git commands, checks some results and handle
+# some errors.
+
 # We purposefully do not use set -e because it causes some issues with
 # capturing exit codes when we want to. Instead, we explicitly check exits.
 # Unless we forget one, which would be bad. But hey, that's bash programming
