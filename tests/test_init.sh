@@ -62,6 +62,18 @@ init_remote () {
 
   cd ..
 
+  cd A
+  if ! git branch | grep ${name} >/dev/null; then
+    err "No branch in remote"
+    exit 1
+  fi
+
+  git checkout -q ${name}
+  if [ ! -f .ink ]; then
+    err "Failed to find ink file"
+    exit 1
+  fi
+
   exit_remote
 }
 
