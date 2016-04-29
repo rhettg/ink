@@ -93,6 +93,45 @@ create () {
   echo
 }
 
+destroy () {
+  name="${1}"
+
+  if [ -d .git ]; then
+    local=1
+    start_branch=$(git rev-parse --abbrev-ref HEAD)
+  elif [ -d "${name}" ]; then
+    local=0
+    pushd "${name}" &> /dev/null
+  else
+    echo "Ink ${name} does not exist"
+    exit 1
+  fi
+
+  git fetch -q origin
+  git checkout -q "${name}"
+  if [ $local -ne 1 ]; then
+    git pull -q
+  fi
+
+  if [ -x script/ink-destroy ]; then
+    if [ ! script/ink-destroy ]; then
+      ret=$?
+      err "Failed executing ink-destroy"
+      exit $ret
+    fi
+  fi
+
+  if [ $local -ne 1 ]; then
+    git push -q origin :"${name}"
+    git fetch -q --prune
+    popd &> /dev/null
+    rm -rf "${name}"
+  else
+    git checkout -q ${start_branch}
+    git branch -q -D ${name}
+  fi
+}
+
 err () {
   >&2 echo $1
 }
@@ -100,7 +139,7 @@ err () {
 if [ $# -eq 0 ] || [ "$1" == "help" ]; then
   help
 elif [ "$1" == "init" ]; then
-  if [ -z $2 ]; then
+  if [ $# -lt 2 ]; then
     err "init where?"
     help
   else
@@ -112,7 +151,12 @@ elif [ "$1" == "create" ]; then
 elif [ "$1" == "update" ]; then
     echo
 elif [ "$1" == "destroy" ]; then
-    echo
+  if [ $# -lt 2 ]; then
+    err "destroy what?"
+    help
+  else
+    destroy $2
+  fi
 else
     >&2 echo "Unknown command"
     help
