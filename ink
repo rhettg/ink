@@ -31,6 +31,7 @@ branch_name () {
   echo "ink-$1"
 }
 
+# Parse a repo clone argument and infer what the repo name should be
 extract_repo_name () {
   local regex="([^\/]+)\.git$"
 
@@ -87,6 +88,10 @@ exit_repo () {
   fi
 }
 
+# Execute the user defined run script
+# If it doesn't exist, that's ok, just skip.
+# We're going to collect non-0 exit status as a global which will be passed
+# onto our caller
 run_script () {
   local script_name=$1
 
@@ -197,7 +202,7 @@ destroy () {
 # Handle all our standard actions that just call the associated user script and
 # commit any changes.
 action () {
-  cmd=$1
+  local cmd=$1
 
   enter_repo
 
@@ -215,7 +220,7 @@ action () {
 # Handle all our standard queries that just call the associated user script and
 # return the results
 query () {
-  cmd=$1
+  local cmd=$1
 
   enter_repo
 
@@ -229,6 +234,8 @@ err () {
   >&2 echo $1
 }
 
+
+## Main ##
 
 if [ $# -eq 0 ] || [ "$1" == "help" ]; then
   help
