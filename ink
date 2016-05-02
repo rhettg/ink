@@ -26,8 +26,10 @@ start_branch=""
 local_repo=0
 
 help () {
-  echo "Usage: $0 <init|create|update|show|destroy|help>"
+  echo "Usage: $(basename $0) <init|create|update|show|destroy|help>"
+  exit 1
 }
+
 
 build_name () {
   local id=$(head /dev/urandom | md5sum | cut -c1-5)
@@ -201,9 +203,14 @@ destroy () {
         err "Failed to unset upstream"
       fi
 
-      if ! git push -q origin :"${name}"; then
-        err "Failed to delete remote branch"
-      fi
+      # For now we're going to NOT delete this from origin.
+      # Basically, if there is a mistake and we delete everything, it's a real
+      # pain (or impossible) to restore it.
+      #
+      # We should probably some how mark them and clean them up later
+      #if ! git push -q origin :"${name}"; then
+        #err "Failed to delete remote branch"
+      #fi
     fi
 
     exit_repo
@@ -234,6 +241,9 @@ action () {
     fi
   fi
 
+  # TODO: What do we do in a failure case here if there were changes? Commit
+  # them? Roll them back?
+
   exit_repo
 }
 
@@ -245,6 +255,17 @@ query () {
   enter_repo
 
   run_script "ink-${cmd}"
+
+  # For a query, we want to throw any changes.
+  if ! git reset -q --hard HEAD; then
+    err "Failed to reset repo"
+    exit 1
+  fi
+
+  if ! git clean -qfd; then
+    err "Failed to cleanup repo"
+    exit 1
+  fi
 
   exit_repo
 }
