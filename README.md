@@ -122,4 +122,5 @@ Boom, checkout [examples/](examples/) for more.
   - [ ] Ink prefix for branch name
   - [ ] TTL
   - [ ] Annotations, like `-m "more instances"`
+  - [ ] Syntax for non-master branches as origin
   - [ ] Work on some provisioner integrations
