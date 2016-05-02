@@ -197,15 +197,15 @@ destroy () {
 
   if run_script "ink-destroy"; then
     if [ $local_repo -ne 1 ]; then
-      # We'll just log but other ignore errors in here. If our cleanup fails...
+      # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
-      if ! git branch -q --unset-upstream; then
-        err "Failed to unset upstream"
-      fi
-
       # For now we're going to NOT delete this from origin.
       # Basically, if there is a mistake and we delete everything, it's a real
       # pain (or impossible) to restore it.
+      #
+      #if ! git branch -q --unset-upstream; then
+        #err "Failed to unset upstream"
+      #fi
       #
       # We should probably some how mark them and clean them up later
       #if ! git push -q origin :"${name}"; then
@@ -216,6 +216,8 @@ destroy () {
     exit_repo
 
     if [ $local_repo -ne 1 ]; then
+      # Since for now, our layout is based on the name of the stack, we'll just
+      # wipe out the repo.
       rm -rf "${name}"
     else
       git branch -q -D ${name}
