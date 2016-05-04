@@ -196,7 +196,7 @@ destroy () {
   enter_repo
 
   if run_script "ink-destroy"; then
-    if [ $local_repo -ne 1 ]; then
+    #if [ $local_repo -ne 1 ]; then
       # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
       # For now we're going to NOT delete this from origin.
@@ -211,7 +211,7 @@ destroy () {
       #if ! git push -q origin :"${name}"; then
         #err "Failed to delete remote branch"
       #fi
-    fi
+    #fi
 
     exit_repo
 
