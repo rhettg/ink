@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PATH=$(dirname $0)/../:$PATH
+PATH=$( pwd ):$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh
