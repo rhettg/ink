@@ -38,17 +38,6 @@ destroy_remote () {
     exit 1
   fi
 
-  cd A
-
-  bc=$(git branch | wc -l)
-  if [ $bc -gt 1 ]; then
-    err "Should only have one branch"
-    git branch
-    exit 1
-  fi
-
-  cd ..
-
   exit_remote
 }
 
