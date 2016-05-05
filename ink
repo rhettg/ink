@@ -277,7 +277,7 @@ show_stacks () {
   if [ -d .git ]; then
     git branch --no-column --no-color --list "$(basename `pwd`)*" | cut -c 3-
   else
-    for is in $( find . -type d -maxdepth 1 \( ! -name ".*" \)); do
+    for is in $( find . -maxdepth 1 -type d \( ! -name ".*" \)); do
       echo $(basename ${is})
     done
   fi
