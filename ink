@@ -196,7 +196,7 @@ destroy () {
   enter_repo
 
   if run_script "ink-destroy"; then
-    if [ $local_repo -ne 1 ]; then
+    #if [ $local_repo -ne 1 ]; then
       # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
       # For now we're going to NOT delete this from origin.
@@ -211,7 +211,7 @@ destroy () {
       #if ! git push -q origin :"${name}"; then
         #err "Failed to delete remote branch"
       #fi
-    fi
+    #fi
 
     exit_repo
 
@@ -277,7 +277,7 @@ show_stacks () {
   if [ -d .git ]; then
     git branch --no-column --no-color --list "$(basename `pwd`)*" | cut -c 3-
   else
-    for is in $( find . -type d -maxdepth 1 \( ! -name ".*" \)); do
+    for is in $( find . -maxdepth 1 -type d \( ! -name ".*" \)); do
       echo $(basename ${is})
     done
   fi

@@ -116,7 +116,12 @@ BUT... what if I told you the scripts for those provisioners already existed!
 
 Boom, checkout [examples/](examples/) for more.
 
-## TODO
+## Development
+
+We Test.
+Build Status: [![Circle CI](https://circleci.com/gh/rhettg/ink.svg?style=svg)](https://circleci.com/gh/rhettg/ink)
+
+### TODO
 
   - [ ] Populate meta-data in `.ink`
   - [ ] Ink prefix for branch name

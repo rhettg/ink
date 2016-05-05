@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PATH=$(dirname $0)/../:$PATH
+PATH=$( pwd ):$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh
@@ -37,17 +37,6 @@ destroy_remote () {
     err "Original is gone?"
     exit 1
   fi
-
-  cd A
-
-  bc=$(git branch | wc -l)
-  if [ $bc -gt 1 ]; then
-    err "Should only have one branch"
-    git branch
-    exit 1
-  fi
-
-  cd ..
 
   exit_remote
 }
