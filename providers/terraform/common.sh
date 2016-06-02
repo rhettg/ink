@@ -9,11 +9,11 @@ terraform_get () {
   fi
 }
 
-ink_tf_init () {
+ink_terraform_init () {
   terraform_get
 }
 
-ink_tf_create () {
+ink_terraform_create () {
   if [ -f terraform.tfstate ]; then
     echo "State already exists"
     exit 1
@@ -26,7 +26,7 @@ ink_tf_create () {
   fi
 }
 
-ink_tf_update () {
+ink_terraform_update () {
   terraform_get
 
   if ! terraform apply -refresh=false; then
@@ -35,13 +35,13 @@ ink_tf_update () {
   fi
 }
 
-ink_tf_plan () {
+ink_terraform_plan () {
   terraform_get
 
   terraform plan -refresh=false
 }
 
-ink_tf_show () {
+ink_terraform_show () {
   if [ ! -f terraform.tfstate ]; then
     echo "Not created"
   else
@@ -49,7 +49,7 @@ ink_tf_show () {
   fi
 }
 
-ink_tf_destroy () {
+ink_terraform_destroy () {
   if ! terraform destroy -force -refresh=false; then
     echo "Failed to destroy"
   fi

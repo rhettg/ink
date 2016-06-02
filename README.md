@@ -106,15 +106,15 @@ This command will then:
   3. Execute your own script `script/ink-update`
   4. Commit any changes and push to origin.
 
-## The Provisioners
+## The Providers
 
 I can already hear you saying it. "Ugh, this doesn't actually DO anything".
 You're right, ink is basically just calling some scripts that you have to write
 and wrapping them around some simple git operations.
 
-BUT... what if I told you the scripts for those provisioners already existed!
+BUT... what if I told you some of these scripts were already written for you!
 
-Boom, checkout [examples/](examples/) for more.
+Boom, checkout [providers/](providers/) for more.
 
 ## Development
 
