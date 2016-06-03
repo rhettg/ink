@@ -106,6 +106,19 @@ This command will then:
   3. Execute your own script `script/ink-update`
   4. Commit any changes and push to origin.
 
+## Environment
+
+When initializing an ink stack you can provide arguments. This will be
+persisted in git and provided to ink scripts when executed. For example:
+
+    $ ink init git@github.com:github/octobatman.git MY_VAR=foo
+    octobatman-d88f7
+
+Your `script/ink-create` can then reference the variable just like any environment variable.
+
+    #!/bin/bash
+    echo "$MY_VAR"
+
 ## The Providers
 
 I can already hear you saying it. "Ugh, this doesn't actually DO anything".

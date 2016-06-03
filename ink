@@ -11,9 +11,10 @@
 # capturing exit codes when we want to. Instead, we explicitly check exits.
 # Unless we forget one, which would be bad. But hey, that's bash programming
 # for you.
-set -u
 set -o pipefail
-#set -x
+if [ -n "$DEBUG" ]; then
+  set -x
+fi
 
 # Fun Globals to keep track of
 name=""
@@ -30,7 +31,6 @@ help () {
   echo "Usage: $(basename $0) <init|create|update|show|destroy|help>"
   exit 1
 }
-
 
 build_name () {
   local id=$(head /dev/urandom | md5sum | cut -c1-5)
@@ -93,9 +93,7 @@ enter_repo () {
     fi
   fi
 
-  if [ -f ./.ink-env ]; then
-    source ./.ink-env
-  fi
+  export_env_args
 }
 
 exit_repo () {
@@ -140,6 +138,15 @@ save_env_args () {
     fi
     shift
   done
+}
+
+export_env_args () {
+  local arg_names
+  if [ -f ./.ink-env ]; then
+    source ./.ink-env
+    arg_names=$(cat ./.ink-env | cut -d "=" -f 1 | awk  '{gsub("\n"," ")};1')
+    export $arg_names
+  fi
 }
 
 # Initialize the specified git repository for use with a new ink stack
@@ -191,8 +198,9 @@ init () {
   save_env_args
   if [ -f ./.ink-env ]; then
     git add ./.ink-env
-    source ./.ink-env
   fi
+
+  export_env_args
 
   if ! git commit -q -m "ink init"; then
     err "Failed to commit ink init"

@@ -170,7 +170,36 @@ EOF
   exit_remote
 }
 
+env_script () {
+  enter_repo ${repo}
+
+  mkdir -p script
+
+  # Don't forget to escape your '$'
+  cat <<EOF > script/ink-create
+#!/bin/bash
+if ! [ "\${FOO}" = "fizz" ]; then
+  echo "'\$FOO' isn't fizz"
+  env
+  exit 1
+fi
+EOF
+  chmod +x script/ink-create
+
+  git add script
+  git commit -q -m "added create script"
+
+  name=$(ink init . FOO=fizz)
+  if ! ink create ${name}; then
+    err "Create failed"
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 success_script
 failed_script
 remote_success_script
 remote_merge
+env_script
