@@ -10,7 +10,7 @@ init_local () {
   enter_repo ${repo}
 
   name=$(ink init .)
-  if [ -z $name ]; then
+  if [ -z "$name" ]; then
     err "No name"
     exit 1
   fi
@@ -74,5 +74,35 @@ init_remote () {
   exit_remote
 }
 
+init_with_args () {
+  enter_repo ${repo}
+
+  name=$(ink init . FOO=fizz BAR=buzz)
+  if [ -z "$name" ]; then
+    err "No name"
+    exit 1
+  fi
+
+  git checkout -q "${name}"
+
+  if [ ! -f .ink-env ]; then
+    err "Failed to find ink file"
+    exit 1
+  fi
+
+  if ! grep -q "FOO=fizz" .ink-env; then
+    err "Failed to find FOO"
+    exit 1
+  fi
+
+  if ! grep -q BAR=buzz .ink-env; then
+    err "Failed to find FOO"
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 init_local
 init_remote
+init_with_args

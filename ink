@@ -18,6 +18,7 @@ set -o pipefail
 # Fun Globals to keep track of
 name=""
 exit_ret=0
+env_args=""
 
 # These keep track of if we're running in local repo mode, meaning we're being
 # executed from within a repo and won't be managing the remotes or cloning
@@ -92,6 +93,9 @@ enter_repo () {
     fi
   fi
 
+  if [ -f ./.ink-env ]; then
+    source ./.ink-env
+  fi
 }
 
 exit_repo () {
@@ -127,6 +131,15 @@ run_script () {
   fi
 
   return $exit_ret
+}
+
+save_env_args () {
+  for arg in $env_args; do
+    if [[ "$arg" =~ .=. ]]; then
+      echo "$arg" >> .ink-env
+    fi
+    shift
+  done
 }
 
 # Initialize the specified git repository for use with a new ink stack
@@ -174,6 +187,13 @@ init () {
 
   touch .ink
   git add .ink
+
+  save_env_args
+  if [ -f ./.ink-env ]; then
+    git add ./.ink-env
+    source ./.ink-env
+  fi
+
   if ! git commit -q -m "ink init"; then
     err "Failed to commit ink init"
     exit 1
@@ -288,7 +308,6 @@ err () {
   >&2 echo $1
 }
 
-
 ## Main ##
 
 if [ $# -eq 0 ] || [ "$1" == "help" ]; then
@@ -305,21 +324,27 @@ if [ $# -lt 2 ]; then
   fi
 fi
 
-case $1 in
+cmd="$1"
+shift
+
+case $cmd in
 init)
-  init $2
+  repo=$1
+  shift
+  env_args="$*"
+  init "$repo"
   ;;
 destroy)
-  name=$2
+  name=$1
   destroy
   ;;
 update|create)
-  name=$2
-  action "$1"
+  name=$1
+  action "$cmd"
   ;;
 show|plan)
-  name=$2
-  query "$1"
+  name=$1
+  query "$cmd"
   ;;
 *)
   err "Unknown command"
