@@ -119,6 +119,23 @@ Your `script/ink-create` can then reference the variable just like any environme
     #!/bin/bash
     echo "$MY_VAR"
 
+There are also some useful built-in environment variables that can be used by your scripts:
+
+  * `INK_NAME` - The name of your ink stack, for example `d88f7` in the above examples.
+
+## Custom Name
+
+You can customize the naming by specifying the special `NAME` variable.
+
+    $ ink init git@github.com:github/octobatman.git ID=production
+    octobatman-production
+
+Or you can completely override the naming system by using the above envionment facilities
+
+    $ ink init git@github.com:github/octobatman.git INK_NAME=alfred
+    alfred
+
+
 ## The Providers
 
 I can already hear you saying it. "Ugh, this doesn't actually DO anything".

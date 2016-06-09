@@ -33,8 +33,14 @@ help () {
 }
 
 build_name () {
-  local id=$(head /dev/urandom | md5sum | cut -c1-5)
-  echo "$1-$id"
+  if [ -n "$INK_NAME" ]; then
+    echo "$INK_NAME"
+  elif [ -n "$ID" ]; then
+    echo "$1-$ID"
+  else
+    local id=$(head /dev/urandom | md5sum | cut -c1-5)
+    echo "$1-$id"
+  fi
 }
 
 branch_name () {
@@ -131,6 +137,18 @@ run_script () {
   return $exit_ret
 }
 
+# During init, someone might have specified and override for the name. Extract it here.
+load_env_args_name () {
+  for arg in $env_args; do
+    if [[ "$arg" =~ INK_NAME=(.+) ]]; then
+      INK_NAME="${BASH_REMATCH[1]}"
+    elif [[ "$arg" =~ ^ID=(.+) ]]; then
+      ID="${BASH_REMATCH[1]}"
+    fi
+    shift
+  done
+}
+
 save_env_args () {
   for arg in $env_args; do
     if [[ "$arg" =~ .=. ]]; then
@@ -166,6 +184,7 @@ init () {
     fi
   fi
 
+  load_env_args_name
   name=$(build_name "${repo}")
 
   if [ $local_repo -ne 1 ]; then
@@ -194,6 +213,8 @@ init () {
 
   touch .ink
   git add .ink
+
+  echo "INK_NAME=${name}" >> .ink-env
 
   save_env_args
   if [ -f ./.ink-env ]; then

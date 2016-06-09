@@ -90,6 +90,11 @@ init_with_args () {
     exit 1
   fi
 
+  if ! grep -q "INK_NAME=" .ink-env; then
+    err "Failed to find INK_NAME"
+    exit 1
+  fi
+
   if ! grep -q "FOO=fizz" .ink-env; then
     err "Failed to find FOO"
     exit 1
@@ -103,6 +108,42 @@ init_with_args () {
   exit_repo ${repo}
 }
 
+init_with_id () {
+  enter_repo ${repo}
+
+  name=$(ink init . ID=fizz)
+  if [ -z "$name" ]; then
+    err "No name"
+    exit 1
+  fi
+
+  if [ ! "$name" = "test_repo-fizz" ]; then
+    err "Incorrect name ${name}"
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
+init_with_name () {
+  enter_repo ${repo}
+
+  name=$(ink init . INK_NAME=fizz)
+  if [ -z "$name" ]; then
+    err "No name"
+    exit 1
+  fi
+
+  if [ ! "$name" = "fizz" ]; then
+    err "Incorrect name ${name}"
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 init_local
 init_remote
 init_with_args
+init_with_name
+init_with_id
