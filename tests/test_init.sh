@@ -21,7 +21,7 @@ init_local () {
     exit 1
   fi
 
-  git checkout -q "${name}"
+  git checkout -q "ink-${name}"
 
   if [ ! -f .ink ]; then
     err "Failed to find ink file"
@@ -49,7 +49,7 @@ init_remote () {
 
   cd ${name}
 
-  git checkout -q "${name}"
+  git checkout -q "ink-${name}"
 
   if [ ! -f .ink ]; then
     err "Failed to find ink file"
@@ -64,7 +64,7 @@ init_remote () {
     exit 1
   fi
 
-  git checkout -q ${name}
+  git checkout -q ink-${name}
   if [ ! -f .ink ]; then
     err "Failed to find ink file"
     exit 1
@@ -83,7 +83,7 @@ init_with_args () {
     exit 1
   fi
 
-  git checkout -q "${name}"
+  git checkout -q "ink-${name}"
 
   if [ ! -f .ink-env ]; then
     err "Failed to find ink file"

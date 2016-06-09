@@ -23,7 +23,7 @@ EOF
   name=$(ink init .)
   ink create ${name}
 
-  git checkout -q ${name}
+  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
@@ -63,7 +63,7 @@ EOF
     exit 1
   fi
 
-  if git log ${name} --oneline | head -1 | grep "ink create" > /dev/null; then
+  if git log ${branch} --oneline | head -1 | grep "ink create" > /dev/null; then
     err "Found create commit after failure"
     git log --oneline
     exit 1
@@ -96,7 +96,7 @@ EOF
 
   cd ${name}
 
-  git checkout -q ${name}
+  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
@@ -108,14 +108,14 @@ EOF
     exit 1
   fi
 
-  if git log --oneline ${name} | grep "Ink auto-merge" >/dev/null; then
+  if git log --oneline ink-${name} | grep "Ink auto-merge" >/dev/null; then
     err "Found auto-merge, should have no changes"
     git log --oneline
     exit 1
   fi
 
   cd ../A
-  git checkout -q ${name}
+  git checkout -q ink-${name}
 
   if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
     err "Failed to find create commit in origin"
@@ -153,13 +153,13 @@ EOF
 
   cd ${name}
 
-  git checkout -q ${name}
+  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
   fi
 
-  if ! git log --oneline ${name} | grep "Ink auto-merge" >/dev/null; then
+  if ! git log --oneline ink-${name} | grep "Ink auto-merge" >/dev/null; then
     err "Failed to find merge commit"
     git log --oneline
     exit 1

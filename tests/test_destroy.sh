@@ -12,7 +12,7 @@ destroy_local () {
   name=$(ink init .)
   ink destroy ${name}
 
-  if git branch | grep ${name}; then
+  if git branch | grep ink-${name}; then
     err "Branch ${name} wasn't cleaned up"
     exit 1
   fi

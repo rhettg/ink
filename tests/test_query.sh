@@ -31,7 +31,7 @@ if [[ "${branch}" != "master" ]]; then
   exit 1
 fi
 
-if ! git log --oneline ${name} | head -1 | grep "ink init" >/dev/null; then
+if ! git log --oneline ink-${name} | head -1 | grep "ink init" >/dev/null; then
   err "Should not have added commit"
   git log --oneline ${name}
   exit 1

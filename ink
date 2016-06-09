@@ -71,11 +71,13 @@ enter_repo () {
     exit 1
   fi
 
+  local branch="$(branch_name "${name}")"
+
   if [ $local_repo -eq 1 ]; then
     start_branch=$(git rev-parse --abbrev-ref HEAD)
 
     # Our working branch *might* already exist
-    git checkout -q ${name} &>/dev/null || true
+    git checkout -q ${branch} &>/dev/null || true
   else
     pushd ${name} &> /dev/null
     if ! git fetch -q origin; then
@@ -83,10 +85,10 @@ enter_repo () {
       exit 1
     fi
 
-    if git checkout -q ${name} &>/dev/null; then
+    if git checkout -q ${branch} &>/dev/null; then
       # We alway stay up to date with our master, auto merging if necessary
       if git diff origin/master | grep diff >/dev/null; then
-        if ! git merge --no-ff -q -m "Ink auto-merge origin/master into ${name}" origin/master; then
+        if ! git merge --no-ff -q -m "Ink auto-merge origin/master into ${branch}" origin/master; then
           git merge --abort
           err "Failed to merge with origin"
           exit 1
@@ -103,8 +105,10 @@ enter_repo () {
 }
 
 exit_repo () {
+  local branch="$(branch_name "${name}")"
+
   if git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null; then
-    if ! git push -q origin "${name}" &> /dev/null; then
+    if ! git push -q origin "${branch}" &> /dev/null; then
       err "Failed to push changes to origin"
     fi
   fi
@@ -186,6 +190,7 @@ init () {
 
   load_env_args_name
   name=$(build_name "${repo}")
+  local branch="$(branch_name "${name}")"
 
   if [ $local_repo -ne 1 ]; then
     # We actually keep a separate repo for each stack.
@@ -201,8 +206,8 @@ init () {
     exit 1
   fi
 
-  if ! git checkout -q -b ${name}; then
-    err "Failed to create branch ${name}"
+  if ! git checkout -q -b ${branch}; then
+    err "Failed to create branch ${branch}"
     exit 1
   fi
 
@@ -230,7 +235,7 @@ init () {
 
   if run_script "ink-init"; then
     if [ $local_repo -ne 1 ]; then
-      git push -q -u origin "${name}" &> /dev/null
+      git push -q -u origin "${branch}" &> /dev/null
     fi
     echo "${name}"
   else
@@ -242,6 +247,8 @@ init () {
 
 # Shutdown and remove an existing ink stack
 destroy () {
+  local branch="$(branch_name "${name}")"
+
   enter_repo
 
   if run_script "ink-destroy"; then
@@ -269,7 +276,7 @@ destroy () {
       # wipe out the repo.
       rm -rf "${name}"
     else
-      git branch -q -D ${name}
+      git branch -q -D ${branch}
     fi
   else
     err "Failed destroying"
@@ -324,10 +331,10 @@ query () {
 # List available stacks
 show_stacks () {
   if [ -d .git ]; then
-    git branch --no-column --no-color --list "$(basename `pwd`)*" | cut -c 3-
+    git branch --no-column --no-color --list "ink-$(basename `pwd`)*" | cut -c 7-
   else
     for is in $( find . -maxdepth 1 -type d \( ! -name ".*" \)); do
-      echo $(basename ${is})
+      basename ${is}
     done
   fi
 }

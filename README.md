@@ -75,7 +75,7 @@ create a new stack based on your octobatman repository:
     octobatman-d88f7
 
 If you check your repository, you'll see one very important thing: A new branch
-called `octobatman-d88f7`
+called `ink-octobatman-d88f7`
 
 Now when we start making use of this stack, we're actually just making changes
 in our branch and again calling hooks.
@@ -84,7 +84,7 @@ in our branch and again calling hooks.
 
 This command will:
 
-  1. Verify our branch `octobatman-d88f7` is at HEAD
+  1. Verify our branch `ink-octobatman-d88f7` is at HEAD
   2. Create a new file in that branch called `.ink`
   3. Execute your own script `script/ink-create`
   4. Commit any changes and push to origin.
@@ -101,7 +101,7 @@ file your tool uses, then commit it to `origin/master`.
 
 This command will then:
 
-  1. Verify our branch `octobatman-d88f7` is at HEAD
+  1. Verify our branch `ink-octobatman-d88f7` is at HEAD
   2. Merge in origin/master
   3. Execute your own script `script/ink-update`
   4. Commit any changes and push to origin.
@@ -154,7 +154,6 @@ Build Status: [![Circle CI](https://circleci.com/gh/rhettg/ink.svg?style=svg)](h
 ### TODO
 
   - [ ] Populate meta-data in `.ink`
-  - [ ] Ink prefix for branch name
   - [ ] TTL
   - [ ] Annotations, like `-m "more instances"`
   - [ ] Syntax for non-master branches as origin

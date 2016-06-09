@@ -9,10 +9,10 @@ repo="test_repo"
 local_show () {
   enter_repo ${repo}
 
-  nameA=$(ink init .)
-  nameB=$(ink init .)
+  ink init . >/dev/null
+  ink init . >/dev/null
 
-  repo_count=$(ink show|wc -l)
+  repo_count=$(ink show | wc -l)
   if [ $repo_count -ne 2 ]; then
     err "Failed to find repos (local)"
     exit 1
