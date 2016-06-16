@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-PATH=$( pwd ):$PATH
+export PATH=$( pwd ):$( pwd )/tests/:$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh
 
-local_show () {
+local_list () {
   enter_repo ${repo}
 
   ink init . >/dev/null
   ink init . >/dev/null
 
-  repo_count=$(ink show | wc -l)
+  repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then
     err "Failed to find repos (local)"
     exit 1
@@ -20,12 +20,12 @@ local_show () {
   exit_repo ${repo}
 }
 
-remote_show () {
+remote_list () {
   enter_remote
   build_repo "A"
   build_repo "B"
 
-  repo_count=$(ink show | wc -l)
+  repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then
     err "Failed to find repos (remote)"
     ink show
@@ -35,5 +35,5 @@ remote_show () {
   exit_remote
 }
 
-local_show
-remote_show
+local_list
+remote_list
