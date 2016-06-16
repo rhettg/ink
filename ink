@@ -42,7 +42,7 @@ build_name () {
     echo "$1-$ink_id"
   else
     ink_id=$(head /dev/urandom | md5sum | cut -c1-5)
-    echo "$1-$id"
+    echo "$1-$ink_id"
   fi
 }
 
