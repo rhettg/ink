@@ -2,7 +2,9 @@
 
 echo "$*" > state.db
 
-if [ -n "$INK_TEST_EXIT" ]; then
+if [ -n "$TF_VAR_TEST_EXIT" ]; then
+  exit $TF_VAR_TEST_EXIT
+elif [ -n "$INK_TEST_EXIT" ]; then
   exit $INK_TEST_EXIT
 else
   exit 0

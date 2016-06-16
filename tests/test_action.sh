@@ -62,23 +62,8 @@ remote_success_script () {
   enter_remote
   build_repo "A"
 
-  cd A
-
-  mkdir -p script
-
-  cat <<EOF > script/ink-create
-#!/bin/bash
-date > state.db
-EOF
-  chmod +x script/ink-create
-
-  git add script
-  git commit -q -m "added create script"
-
-  cd ..
-
   name=$(ink init ./A)
-  ink create ${name}
+  ink apply ${name}
 
   cd ${name}
 
@@ -88,14 +73,8 @@ EOF
     exit 1
   fi
 
-  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
-    err "Failed to find create commit"
-    git log --oneline
-    exit 1
-  fi
-
-  if git log --oneline ink-${name} | grep "Ink auto-merge" >/dev/null; then
-    err "Found auto-merge, should have no changes"
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit"
     git log --oneline
     exit 1
   fi
@@ -103,8 +82,8 @@ EOF
   cd ../A
   git checkout -q ink-${name}
 
-  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
-    err "Failed to find create commit in origin"
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit in origin"
     git log --oneline
     exit 1
   fi
@@ -120,33 +99,25 @@ remote_merge () {
   build_repo "A"
   name=$(ink init ./A)
 
+  ink apply ${name}
+
   cd A
 
-  mkdir -p script
 
-  cat <<EOF > script/ink-create
-#!/bin/bash
-date > state.db
-EOF
-  chmod +x script/ink-create
-
-  git add script
-  git commit -q -m "added create script"
+  git checkout -q ink-${name}
+  git commit -q --allow-empty -m "test update"
+  git checkout -q master
 
   cd ..
 
-  ink create ${name}
+  ink apply ${name}
 
   cd ${name}
 
   git checkout -q ink-${name}
-  if [ ! -f state.db ]; then
-    err "Create didn't run"
-    exit 1
-  fi
 
-  if ! git log --oneline ink-${name} | grep "Ink auto-merge" >/dev/null; then
-    err "Failed to find merge commit"
+  if ! git log --oneline | grep "test update" >/dev/null; then
+    err "Failed to find update"
     git log --oneline
     exit 1
   fi
@@ -159,25 +130,11 @@ EOF
 env_script () {
   enter_repo ${repo}
 
-  mkdir -p script
+  export INK_TEST_EXIT=1
+  name=$(ink init . TEST_EXIT=0)
 
-  # Don't forget to escape your '$'
-  cat <<EOF > script/ink-create
-#!/bin/bash
-if ! [ "\${FOO}" = "fizz" ]; then
-  echo "'\$FOO' isn't fizz"
-  env
-  exit 1
-fi
-EOF
-  chmod +x script/ink-create
-
-  git add script
-  git commit -q -m "added create script"
-
-  name=$(ink init . FOO=fizz)
-  if ! ink create ${name}; then
-    err "Create failed"
+  if ! ink apply ${name}; then
+    err "apply failed"
     exit 1
   fi
 
@@ -186,6 +143,6 @@ EOF
 
 success_apply
 failed_apply
-#remote_success_script
-##remote_merge
-#env_script
+remote_success_script
+remote_merge
+env_script
