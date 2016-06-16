@@ -77,7 +77,7 @@ init_remote () {
 init_with_args () {
   enter_repo ${repo}
 
-  name=$(ink init . FOO=fizz BAR=buzz)
+  name=$(ink init . foo=fizz bar=buzz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -90,17 +90,17 @@ init_with_args () {
     exit 1
   fi
 
-  if ! grep -q "INK_NAME=" .ink-env; then
-    err "Failed to find INK_NAME"
+  if ! grep -q "ink_name=" .ink-env; then
+    err "Failed to find ink_name"
     exit 1
   fi
 
-  if ! grep -q "FOO=fizz" .ink-env; then
+  if ! grep -q "TF_VAR_foo=fizz" .ink-env; then
     err "Failed to find FOO"
     exit 1
   fi
 
-  if ! grep -q BAR=buzz .ink-env; then
+  if ! grep -q TF_VAR_bar=buzz .ink-env; then
     err "Failed to find FOO"
     exit 1
   fi
@@ -111,7 +111,7 @@ init_with_args () {
 init_with_id () {
   enter_repo ${repo}
 
-  name=$(ink init . ID=fizz)
+  name=$(ink init . ink_id=fizz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -128,7 +128,7 @@ init_with_id () {
 init_with_name () {
   enter_repo ${repo}
 
-  name=$(ink init . INK_NAME=fizz)
+  name=$(ink init . ink_name=fizz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1

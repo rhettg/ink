@@ -17,7 +17,8 @@ if [ -n "$DEBUG" ]; then
 fi
 
 # Fun Globals to keep track of
-name=""
+ink_name=""
+ink_id=""
 exit_ret=0
 env_args=""
 
@@ -28,17 +29,17 @@ start_branch=""
 local_repo=0
 
 help () {
-  echo "Usage: $(basename $0) <init|create|update|show|destroy|help>"
+  echo "Usage: $(basename $0) <init|list|plan|apply|destroy|help>"
   exit 1
 }
 
 build_name () {
-  if [ -n "$INK_NAME" ]; then
-    echo "$INK_NAME"
-  elif [ -n "$ID" ]; then
-    echo "$1-$ID"
+  if [ -n "$ink_name" ]; then
+    echo "$ink_name"
+  elif [ -n "$ink_id" ]; then
+    echo "$1-$ink_id"
   else
-    local id=$(head /dev/urandom | md5sum | cut -c1-5)
+    ink_id=$(head /dev/urandom | md5sum | cut -c1-5)
     echo "$1-$id"
   fi
 }
@@ -66,12 +67,12 @@ extract_repo_name () {
 enter_repo () {
   if [ -d .git ]; then
     local_repo=1
-  elif [ ! -d "${name}" ]; then
-    echo "Ink ${name} does not exist"
+  elif [ ! -d "${ink_name}" ]; then
+    echo "Ink ${ink_name} does not exist"
     exit 1
   fi
 
-  local branch="$(branch_name "${name}")"
+  local branch="$(branch_name "${ink_name}")"
 
   if [ $local_repo -eq 1 ]; then
     start_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -79,7 +80,7 @@ enter_repo () {
     # Our working branch *might* already exist
     git checkout -q ${branch} &>/dev/null || true
   else
-    pushd ${name} &> /dev/null
+    pushd ${ink_name} &> /dev/null
     if ! git fetch -q origin; then
       err "Failed to fetch from origin"
       exit 1
@@ -105,7 +106,7 @@ enter_repo () {
 }
 
 exit_repo () {
-  local branch="$(branch_name "${name}")"
+  local branch="$(branch_name "${ink_name}")"
 
   if git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null; then
     if ! git push -q origin "${branch}" &> /dev/null; then
@@ -144,10 +145,10 @@ run_script () {
 # During init, someone might have specified and override for the name. Extract it here.
 load_env_args_name () {
   for arg in $env_args; do
-    if [[ "$arg" =~ INK_NAME=(.+) ]]; then
-      INK_NAME="${BASH_REMATCH[1]}"
-    elif [[ "$arg" =~ ^ID=(.+) ]]; then
-      ID="${BASH_REMATCH[1]}"
+    if [[ "$arg" =~ ink_name=(.+) ]]; then
+      ink_name="${BASH_REMATCH[1]}"
+    elif [[ "$arg" =~ ^ink_id=(.+) ]]; then
+      ink_id="${BASH_REMATCH[1]}"
     fi
     shift
   done
@@ -156,7 +157,7 @@ load_env_args_name () {
 save_env_args () {
   for arg in $env_args; do
     if [[ "$arg" =~ .=. ]]; then
-      echo "$arg" >> .ink-env
+      echo "TF_VAR_$arg" >> .ink-env
     fi
     shift
   done
@@ -189,14 +190,14 @@ init () {
   fi
 
   load_env_args_name
-  name=$(build_name "${repo}")
-  local branch="$(branch_name "${name}")"
+  ink_name=$(build_name "${repo}")
+  local branch="$(branch_name "${ink_name}")"
 
   if [ $local_repo -ne 1 ]; then
     # We actually keep a separate repo for each stack.
     # We could combine stacks for the same repo, but we'd have to sort out
     # concurrency issues. Doable. But skipping for now.
-    git clone -q -- ${remote} ${name}
+    git clone -q -- ${remote} ${ink_name}
   fi
 
   enter_repo
@@ -219,7 +220,7 @@ init () {
   touch .ink
   git add .ink
 
-  echo "INK_NAME=${name}" >> .ink-env
+  echo "TF_VAR_ink_name=${ink_name}" >> .ink-env
 
   save_env_args
   if [ -f ./.ink-env ]; then
@@ -237,7 +238,7 @@ init () {
     if [ $local_repo -ne 1 ]; then
       git push -q -u origin "${branch}" &> /dev/null
     fi
-    echo "${name}"
+    echo "${ink_name}"
   else
     err "init failed, what to do?"
   fi
@@ -247,7 +248,7 @@ init () {
 
 # Shutdown and remove an existing ink stack
 destroy () {
-  local branch="$(branch_name "${name}")"
+  local branch="$(branch_name "${ink_name}")"
 
   enter_repo
 
@@ -274,7 +275,7 @@ destroy () {
     if [ $local_repo -ne 1 ]; then
       # Since for now, our layout is based on the name of the stack, we'll just
       # wipe out the repo.
-      rm -rf "${name}"
+      rm -rf "${ink_name}"
     else
       git branch -q -D ${branch}
     fi
@@ -371,15 +372,15 @@ init)
   init "$repo"
   ;;
 destroy)
-  name=$1
+  ink_name=$1
   destroy
   ;;
 update|create)
-  name=$1
+  ink_name=$1
   action "$cmd"
   ;;
 show|plan)
-  name=$1
+  ink_name=$1
   query "$cmd"
   ;;
 *)
