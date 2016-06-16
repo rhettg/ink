@@ -28,6 +28,8 @@ env_args=""
 start_branch=""
 local_repo=0
 
+export TF_INPUT=0
+
 help () {
   echo "Usage: $(basename $0) <init|list|plan|apply|destroy|help>"
   exit 1
@@ -87,18 +89,10 @@ enter_repo () {
     fi
 
     if git checkout -q ${branch} &>/dev/null; then
-      # We alway stay up to date with our master, auto merging if necessary
-      if git diff origin/master | grep diff >/dev/null; then
-        if ! git merge --no-ff -q -m "Ink auto-merge origin/master into ${branch}" origin/master; then
-          git merge --abort
-          err "Failed to merge with origin"
-          exit 1
-        fi
+      if ! git pull origin -q --ff-only &>/dev/null; then
+        err "Failed to update with origin"
+        exit 1
       fi
-    else
-      # We don't have an ink branch, let's just make sure master is up to do date
-      git checkout -q master
-      git pull -q --ff-only
     fi
   fi
 
@@ -121,25 +115,6 @@ exit_repo () {
   else
     popd &> /dev/null
   fi
-}
-
-# Execute the user defined run script
-# If it doesn't exist, that's ok, just skip.
-# We're going to collect non-0 exit status as a global which will be passed
-# onto our caller
-run_script () {
-  local script_name=$1
-
-  if [ -x script/${script_name} ]; then
-
-    script/${script_name}
-    exit_ret=$?
-    if [ $exit_ret -ne 0 ]; then
-      err "Failed executing ${script_name}"
-    fi
-  fi
-
-  return $exit_ret
 }
 
 # During init, someone might have specified and override for the name. Extract it here.
@@ -229,19 +204,21 @@ init () {
 
   export_env_args
 
+  if ! output=$(terraform get -no-color); then
+    echo "Failed to retrieve dependencies"
+    echo "${output}"
+    exit 1
+  fi
+
   if ! git commit -q -m "ink init"; then
     err "Failed to commit ink init"
     exit 1
   fi
 
-  if run_script "ink-init"; then
-    if [ $local_repo -ne 1 ]; then
-      git push -q -u origin "${branch}" &> /dev/null
-    fi
-    echo "${ink_name}"
-  else
-    err "init failed, what to do?"
+  if [ $local_repo -ne 1 ]; then
+    git push -q -u origin "${branch}" &> /dev/null
   fi
+  echo "${ink_name}"
 
   exit_repo
 }
@@ -252,7 +229,7 @@ destroy () {
 
   enter_repo
 
-  if run_script "ink-destroy"; then
+  if terraform destroy -force -refresh=false; then
     #if [ $local_repo -ne 1 ]; then
       # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
@@ -292,16 +269,21 @@ action () {
 
   enter_repo
 
-  if run_script "ink-${cmd}"; then
-    git add -A .
-    if ! git commit -q --allow-empty -m "ink ${cmd}"; then
-      err "Failed to commit ink ${cmd}"
-      exit 1
-    fi
+  terraform $cmd -refresh=false
+  exit_ret=$?
+  if [ "$exit_ret" -eq 0 ]; then
+    msg="ink ${cmd}"
+  else
+    msg="ink ${cmd} [failed]"
   fi
 
-  # TODO: What do we do in a failure case here if there were changes? Commit
-  # them? Roll them back?
+  # No matter what we want to save any changes
+
+  git add -A .
+  if ! git commit -q --allow-empty -m "${msg}"; then
+    err "Failed to commit ink ${cmd}"
+    exit 1
+  fi
 
   exit_repo
 }
@@ -313,7 +295,9 @@ query () {
 
   enter_repo
 
-  run_script "ink-${cmd}"
+  # No sense exiting right away, we need to cleanup
+  terraform $cmd -refresh=false
+  exit_ret=$?
 
   # For a query, we want to throw any changes.
   if ! git reset -q --hard HEAD; then
@@ -352,7 +336,8 @@ if [ $# -eq 0 ] || [ "$1" == "help" ]; then
 fi
 
 if [ $# -lt 2 ]; then
-  if [[ $1 == "show" ]]; then
+  # Our only single arg command
+  if [[ $1 == "list" ]]; then
     show_stacks
     exit $exit_ret
   else
@@ -375,11 +360,11 @@ destroy)
   ink_name=$1
   destroy
   ;;
-update|create)
+apply|refresh|get)
   ink_name=$1
   action "$cmd"
   ;;
-show|plan)
+output|plan)
   ink_name=$1
   query "$cmd"
   ;;

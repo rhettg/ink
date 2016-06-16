@@ -83,6 +83,7 @@ don't always make sense in a remote context.
   * `ink apply <name>` - Run `terraform apply`. NOTE: We automatically disable refreshing.
   * `ink refresh <name>` - Run `terraform refresh`
   * `ink plan <name>` - Run `terraform plan`
+  * `ink output <name>` - Run `terraform output`
   * `ink list` - Show available ink branches
 
 ## Installation

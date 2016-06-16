@@ -1,27 +1,16 @@
 #!/bin/bash
 set -e
 
-PATH=$( pwd ):$PATH
+export PATH=$( pwd ):$( pwd )/tests/:$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh
 
-success_script () {
+success_apply () {
   enter_repo ${repo}
 
-  mkdir -p script
-
-  cat <<EOF > script/ink-create
-#!/bin/bash
-touch state.db
-EOF
-  chmod +x script/ink-create
-
-  git add script
-  git commit -q -m "added create script"
-
   name=$(ink init .)
-  ink create ${name}
+  ink apply ${name}
 
   git checkout -q ink-${name}
   if [ ! -f state.db ]; then
@@ -29,8 +18,8 @@ EOF
     exit 1
   fi
 
-  if ! git log --oneline | head -1 | grep "ink create" >/dev/null; then
-    err "Failed to find create commit"
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit"
     git log --oneline
     exit 1
   fi
@@ -38,21 +27,14 @@ EOF
   exit_repo ${repo}
 }
 
-failed_script () {
+failed_apply () {
   enter_repo ${repo}
 
-  mkdir -p script
-  cat <<EOF > script/ink-create
-#!/bin/bash
-exit 1
-EOF
-  chmod +x script/ink-create
-
-  git add script
-  git commit -q -m "added create script"
-
   name=$(ink init .)
-  if ink create ${name} &>/dev/null; then
+
+  export INK_TEST_EXIT=1
+
+  if ink apply ${name}; then
     err "Create should have failed"
     exit 1
   fi
@@ -63,11 +45,15 @@ EOF
     exit 1
   fi
 
-  if git log ${branch} --oneline | head -1 | grep "ink create" > /dev/null; then
-    err "Found create commit after failure"
+  git checkout -q ink-${name}
+
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit"
     git log --oneline
     exit 1
   fi
+
+  export INK_TEST_EXIT=0
 
   exit_repo ${repo}
 }
@@ -198,8 +184,8 @@ EOF
   exit_repo ${repo}
 }
 
-success_script
-failed_script
-remote_success_script
-remote_merge
-env_script
+success_apply
+failed_apply
+#remote_success_script
+##remote_merge
+#env_script
