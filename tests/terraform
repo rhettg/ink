@@ -4,6 +4,10 @@ if [ "$1" == "output" ]; then
   cat state.db
 else
   echo "$*" > state.db
+
+  if [[ "$1" == "plan" ]]; then
+    touch ink.plan
+  fi
 fi
 
 if [ -n "$TF_VAR_TEST_EXIT" ]; then

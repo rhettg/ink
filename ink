@@ -104,7 +104,7 @@ exit_repo () {
   local branch="$(branch_name "${ink_name}")"
 
   if git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null; then
-    if ! git push -q origin "${branch}" &> /dev/null; then
+    if ! git push -q origin "${branch}" ; then
       err "Failed to push changes to origin"
     fi
   fi
@@ -275,10 +275,6 @@ destroy () {
 action () {
   local cmd=$1
 
-  if [[ "$cmd" == "apply" ]]; then
-    tf_opts="-refresh=false"
-  fi
-
   enter_repo
 
   if [ -x script/update ]; then
@@ -289,7 +285,7 @@ action () {
   fi
 
   if [ "$exit_ret" -eq 0 ]; then
-    terraform ${cmd} ${tf_opts}
+    terraform ${cmd}
     exit_ret=$?
     if [ "$exit_ret" -eq 0 ]; then
       msg="ink ${cmd}"
@@ -311,22 +307,86 @@ action () {
   exit_repo
 }
 
-# Handle all our standard queries that just call the associated user script and
-# return the results
-query () {
-  local cmd=$1
+plan () {
+  enter_repo
+
+  local msg
+
+  if [ -x script/update ]; then
+    if ! script/update; then
+      err "Failed to execute update script"
+      msg="ink plan [update failed]"
+      exit_ret=1
+    fi
+  fi
+
+  if [ "$exit_ret" -eq 0 ]; then
+    terraform plan -refresh=false -out=ink.plan
+    exit_ret=$?
+    if [ "$exit_ret" -eq 0 ]; then
+      msg="ink plan"
+    else
+      msg="ink plan [failed]"
+    fi
+  fi
+
+  # No matter what we want to save any changes
+
+  git add -A .
+  if ! git commit -q --allow-empty -m "${msg}"; then
+    err "Failed to commit ink plan"
+    exit 1
+  fi
+
+  exit_repo
+}
+
+apply () {
+  local plan_file
+  if [ -f ink.plan ]; then
+    plan_file="ink.plan"
+  fi
 
   enter_repo
 
   if [ -x script/update ]; then
     if ! script/update; then
       err "Failed to execute update script"
+      msg="ink ${cmd} [update failed]"
       exit_ret=1
     fi
   fi
 
+  if [ "$exit_ret" -eq 0 ]; then
+    terraform apply -refresh=false ${plan_file}
+    exit_ret=$?
+    if [ "$exit_ret" -eq 0 ]; then
+      msg="ink apply"
+
+      if [ -f ink.plan ]; then
+        git rm ink.plan
+      fi
+    else
+      msg="ink ${cmd} [failed]"
+    fi
+  fi
+
+  # No matter what we want to save any changes
+
+  git add -A .
+  if ! git commit -q --allow-empty -m "${msg}"; then
+    err "Failed to commit ink ${cmd}"
+    exit 1
+  fi
+
+  exit_repo
+}
+
+output () {
+  enter_repo
+
   # No sense exiting right away, we need to cleanup
-  terraform ${cmd} -refresh=false
+  terraform output
   exit_ret=$?
 
   # For a query, we want to throw any changes.
@@ -390,13 +450,21 @@ destroy)
   ink_name=$1
   destroy
   ;;
-apply|refresh|get)
+apply)
+  ink_name=$1
+  apply
+  ;;
+plan)
+  ink_name=$1
+  plan
+  ;;
+refresh|get)
   ink_name=$1
   action "$cmd"
   ;;
-output|plan)
+output)
   ink_name=$1
-  query "$cmd"
+  output
   ;;
 *)
   err "Unknown command"

@@ -90,7 +90,7 @@ don't always make sense in a remote context.
 Ink supports user-defined scripts, similiar to the [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) Concept.
 
   * `script/setup` - If it exists and is executable, ink will automatically execute it during `init`
-  * `script/update` - If exists and is executable, ink will automatically execute it before anything else.
+  * `script/update` - If exists and is executable, ink will automatically execute it before anything mutable action.
 
 
 ## Installation
