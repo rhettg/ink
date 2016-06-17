@@ -142,8 +142,35 @@ init_with_name () {
   exit_repo ${repo}
 }
 
+init_with_setup () {
+  enter_repo ${repo}
+
+  mkdir -p script
+
+  cat <<EOF > script/setup
+#!/bin/bash
+touch \${TF_VAR_foo}.db
+EOF
+  chmod +x script/setup
+
+  git add script
+  git commit -q -m "added setup script"
+
+  name=$(ink init . foo=fizz)
+
+  git checkout -q ink-${name}
+
+  if [ ! -f fizz.db ]; then
+    err "setup didnt' run"
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 init_local
 init_remote
 init_with_args
 init_with_name
 init_with_id
+init_with_setup

@@ -73,7 +73,6 @@ Or you can completely override the naming system by using the above envionment f
     $ ink init git@github.com:github/octobatman.git ink_name=alfred
     alfred
 
-
 ## Command Reference
 
 While ink is a wrapper around terraform, not all commands are implemented. They
@@ -85,6 +84,14 @@ don't always make sense in a remote context.
   * `ink plan <name>` - Run `terraform plan`
   * `ink output <name>` - Run `terraform output`
   * `ink list` - Show available ink branches
+
+## Scripts and Extensions
+
+Ink supports user-defined scripts, similiar to the [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) Concept.
+
+  * `script/setup` - If it exists and is executable, ink will automatically execute it during `init`
+  * `script/update` - If exists and is executable, ink will automatically execute it before anything else.
+
 
 ## Installation
 

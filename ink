@@ -21,6 +21,7 @@ ink_name=""
 ink_id=""
 exit_ret=0
 env_args=""
+tf_opts=""
 
 # These keep track of if we're running in local repo mode, meaning we're being
 # executed from within a repo and won't be managing the remotes or cloning
@@ -210,6 +211,13 @@ init () {
     exit 1
   fi
 
+  if [ -x script/setup ]; then
+    if ! script/setup; then
+      err "Failed to execute setup"
+      exit_ret=1
+    fi
+  fi
+
   if ! git commit -q -m "ink init"; then
     err "Failed to commit ink init"
     exit 1
@@ -267,14 +275,29 @@ destroy () {
 action () {
   local cmd=$1
 
+  if [[ "$cmd" == "apply" ]]; then
+    tf_opts="-refresh=false"
+  fi
+
   enter_repo
 
-  terraform $cmd -refresh=false
-  exit_ret=$?
+  if [ -x script/update ]; then
+    if ! script/update; then
+      err "Failed to execute update script"
+      exit_ret=1
+    fi
+  fi
+
   if [ "$exit_ret" -eq 0 ]; then
-    msg="ink ${cmd}"
+    terraform ${cmd} ${tf_opts}
+    exit_ret=$?
+    if [ "$exit_ret" -eq 0 ]; then
+      msg="ink ${cmd}"
+    else
+      msg="ink ${cmd} [failed]"
+    fi
   else
-    msg="ink ${cmd} [failed]"
+    msg="ink ${cmd} [update failed]"
   fi
 
   # No matter what we want to save any changes
@@ -295,8 +318,15 @@ query () {
 
   enter_repo
 
+  if [ -x script/update ]; then
+    if ! script/update; then
+      err "Failed to execute update script"
+      exit_ret=1
+    fi
+  fi
+
   # No sense exiting right away, we need to cleanup
-  terraform $cmd -refresh=false
+  terraform ${cmd} -refresh=false
   exit_ret=$?
 
   # For a query, we want to throw any changes.

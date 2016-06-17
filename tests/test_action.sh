@@ -130,11 +130,28 @@ remote_merge () {
 env_script () {
   enter_repo ${repo}
 
-  export INK_TEST_EXIT=1
-  name=$(ink init . TEST_EXIT=0)
+  mkdir -p script
+
+  cat <<EOF > script/update
+#!/bin/bash
+touch \${TF_VAR_foo}.db
+EOF
+  chmod +x script/update
+
+  git add script
+  git commit -q -m "added setup script"
+
+  name=$(ink init . foo=fizz)
 
   if ! ink apply ${name}; then
     err "apply failed"
+    exit 1
+  fi
+
+  git checkout -q ink-${name}
+
+  if [ ! -f fizz.db ]; then
+    err "setup didnt' run"
     exit 1
   fi
 
