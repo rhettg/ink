@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-PATH=$( pwd ):$PATH
+export PATH=$( pwd ):$( pwd )/tests/:$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh

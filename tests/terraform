@@ -1,6 +1,10 @@
 #!/bin/bash
 
-echo "$*" > state.db
+if [ "$1" == "output" ]; then
+  cat state.db
+else
+  echo "$*" > state.db
+fi
 
 if [ -n "$TF_VAR_TEST_EXIT" ]; then
   exit $TF_VAR_TEST_EXIT

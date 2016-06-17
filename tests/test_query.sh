@@ -1,26 +1,19 @@
 #!/bin/bash
 set -e
 
-PATH=$( pwd ):$PATH
+export PATH=$( pwd ):$( pwd )/tests/:$PATH
 repo="test_repo"
 
 . $(dirname $0)/util.sh
 
 enter_repo ${repo}
 
-mkdir -p script
-cat <<EOF > script/ink-show
-#!/bin/bash
-echo "hello world"
-EOF
-chmod +x script/ink-show
-
-git add script
-git commit -q -m "added show script"
-
 name=$(ink init .)
-output=$(ink show ${name})
-if [[ "$output" != "hello world" ]]; then
+
+ink apply ${name}
+
+output=$(ink output ${name})
+if [[ "$output" != "apply -refresh=false" ]]; then
   err "Bad output: ${output}"
   exit 1
 fi
@@ -31,9 +24,11 @@ if [[ "${branch}" != "master" ]]; then
   exit 1
 fi
 
-if ! git log --oneline ink-${name} | head -1 | grep "ink init" >/dev/null; then
+git checkout -q ink-${name}
+
+if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
   err "Should not have added commit"
-  git log --oneline ${name}
+  git log --oneline
   exit 1
 fi
 
