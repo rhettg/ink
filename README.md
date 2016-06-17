@@ -124,6 +124,5 @@ Run ink from inside the repository starting with:
 ### TODO
 
   - [ ] More helpful ink-env vars
+  - [ ] Might be interesting to store logs
   - [ ] TTL
-  - [ ] Annotations, like `-m "more instances"`
-  - [ ] Syntax for non-master branches as origin
