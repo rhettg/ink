@@ -364,7 +364,7 @@ apply () {
       msg="ink apply"
 
       if [ -f ink.plan ]; then
-        git rm ink.plan
+        git rm -q ink.plan
       fi
     else
       msg="ink ${cmd} [failed]"
