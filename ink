@@ -431,7 +431,7 @@ if [ $# -lt 2 ]; then
     show_stacks
     exit $exit_ret
   else
-    err "${$1} what?"
+    err "$1 what?"
     help
   fi
 fi
