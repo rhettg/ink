@@ -1,5 +1,0 @@
-#!/bin/bash
-
-echo "Updating stack ${INK_NAME}"
-
-date >> state.db

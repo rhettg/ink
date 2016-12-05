@@ -1,5 +1,0 @@
-#!/bin/bash
-
-. $(dirname $0)/ink-tf-common.sh
-
-ink_tf_show
