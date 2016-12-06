@@ -325,6 +325,13 @@ plan () {
         err "Failed to checkout $branch"
         exit 1
       fi
+
+      if [ $local_repo -ne 1 ]; then
+        if ! git push -q -u origin "${branch}" &> /dev/null; then
+          err "Failed to push plan branch to origin"
+          exit 1
+        fi
+      fi
     fi
 
     if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
@@ -362,6 +369,13 @@ plan () {
   fi
 
   git log -n 1 --pretty=format:"%h"
+
+  if [ -n "$branch" ] && [ $local_repo -ne 1 ]; then
+    if ! git push origin $branch; then
+      err "Failed to push $branch to origin"
+      exit_ret=1
+    fi
+  fi
 
   if [ -n "$restore_branch" ]; then
     git checkout -q $restore_branch
