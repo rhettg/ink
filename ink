@@ -22,6 +22,8 @@ ink_id=""
 exit_ret=0
 env_args=""
 tf_opts=""
+cb_name="" # Change Branch name (for dealing with changes)
+cb_sha=""
 
 # These keep track of if we're running in local repo mode, meaning we're being
 # executed from within a repo and won't be managing the remotes or cloning
@@ -311,6 +313,27 @@ plan () {
   enter_repo
 
   local msg
+  local branch
+  local restore_branch
+
+  if [ -n "$cb_name" ]; then
+    restore_branch=$(git rev-parse --abbrev-ref HEAD)
+
+    branch="${cb_name}_${ink_name}"
+    if ! git checkout -q "$branch" 2>/dev/null; then
+      if ! git checkout -q -b "$branch"; then
+        err "Failed to checkout $branch"
+        exit 1
+      fi
+    fi
+
+    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
+      err "Failed to auto-merge $cb_name"
+      git merge --abort
+      git checkout -q $restore_branch
+      exit 1
+    fi
+  fi
 
   if [ -x script/update ]; then
     if ! script/update; then
@@ -338,6 +361,12 @@ plan () {
     exit 1
   fi
 
+  git log -n 1 --pretty=format:"%h"
+
+  if [ -n "$restore_branch" ]; then
+    git checkout -q $restore_branch
+  fi
+
   exit_repo
 }
 
@@ -348,6 +377,19 @@ apply () {
   fi
 
   enter_repo
+
+  if [ -n "$cb_sha" ]; then
+    if ! git merge -q --ff-only $cb_sha; then
+      err "Failed to merge $cb_sha"
+      exit 1
+    fi
+  elif [ -n "$cb_name" ]; then
+    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
+      git merge --abort
+      err "Failed to auto-merge $cb_name"
+      exit 1
+    fi
+  fi
 
   if [ -x script/update ]; then
     if ! script/update; then
@@ -452,10 +494,13 @@ destroy)
   ;;
 apply)
   ink_name=$1
+  cb_name=$2
   apply
   ;;
 plan)
   ink_name=$1
+  cb_name=$2
+  cb_sha=$3
   plan
   ;;
 refresh|get)

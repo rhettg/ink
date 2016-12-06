@@ -73,17 +73,54 @@ Or you can completely override the naming system by using the above envionment f
     $ ink init git@github.com:github/octobatman.git ink_name=alfred
     alfred
 
+
+## Making Changes
+
+Ink helps manage your branches so you can confidently make changes to your
+terraform resources and have the changes peer reviewed just like any other
+code.
+
+As an example, imagine you were changing the name of a security group in your
+terraform configs. You would create a feature branch off of `master`:
+
+    $ git checkout -b sg-fix
+    $ vi main.tf
+    $ git commit -a -m "fixed security group"
+    $ git push -u origin sg-fix
+
+To fully understand the impact of your changes, you'll want to generate a plan
+against at least one of your Ink stacks.
+
+    $ ink plan octobatman-d88f7 sg-fix
+    sg-fix_octobatman-d88f7/48215ab
+
+This has created a new branch based on the stack `octobatman-d88f7`, merged in
+your changes in `sg-fix` and run `terraform plan`. The outputted SHA is revision
+so you can later ensure you are applying the same changes.
+
+If you're satisifed with these changes, you can then apply them:
+
+    $ ink apply octobatman-d88f7 sg-fix 48215ab
+
+
+This will use the same plan generated above and merge your changes into the stack.
+
+Assuming you want these changes to be used in future stacks as well, you should probably then:
+
+    $ git checkout master
+    $ git merge sg-fix
+
 ## Command Reference
 
 While ink is a wrapper around terraform, not all commands are implemented. They
 don't always make sense in a remote context.
 
   * `ink init <git repository>` - Clone a repository and configure a new ink branch.
-  * `ink apply <name>` - Run `terraform apply`. NOTE: We automatically disable refreshing.
-  * `ink refresh <name>` - Run `terraform refresh`
-  * `ink plan <name>` - Run `terraform plan`
+  * `ink refresh <name> []` - Run `terraform refresh`
+  * `ink plan <name> [branch]` - Generate a plan file for any changes in the branch.
+  * `ink apply <name> [branch]` - Apply changes in the branch, using a plan file if available.
   * `ink output <name>` - Run `terraform output`
-  * `ink list` - Show available ink branches
+  * `ink list` - Show available ink stacks
 
 ## Scripts and Extensions
 
@@ -123,6 +160,7 @@ Run ink from inside the repository starting with:
 
 ### TODO
 
+  - [ ] Lockfile for server mode
   - [ ] More helpful ink-env vars
   - [ ] Might be interesting to store logs
   - [ ] TTL

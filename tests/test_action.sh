@@ -27,6 +27,79 @@ success_apply () {
   exit_repo ${repo}
 }
 
+success_apply_merge () {
+  enter_repo ${repo}
+
+  name=$(ink init .)
+
+  git checkout -q -b a-change
+  touch change.txt
+  git add change.txt
+  git commit -qa -m "added a file"
+  git checkout -q master
+
+  ink apply ${name} a-change
+
+  git checkout -q ink-${name}
+  if [ ! -f state.db ]; then
+    err "Create didn't run"
+    exit 1
+  fi
+
+  if [ ! -f change.txt ]; then
+    err "missing merge"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit"
+    git log --oneline
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
+success_apply_merge_sha () {
+  enter_repo ${repo}
+
+  name=$(ink init .)
+
+  git checkout -q -b a-change
+  touch change.txt
+  git add change.txt
+  git commit -qa -m "added a file"
+  git checkout -q master
+
+  sha=$(ink plan ${name} a-change)
+
+  if [ -z "$sha" ]; then
+    err "Missing sha"
+    exit 1
+  fi
+
+  ink apply ${name} a-change $sha
+
+  git checkout -q ink-${name}
+  if [ ! -f state.db ]; then
+    err "Create didn't run"
+    exit 1
+  fi
+
+  if [ ! -f change.txt ]; then
+    err "missing merge"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
+    err "Failed to find apply commit"
+    git log --oneline
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 failed_apply () {
   enter_repo ${repo}
 
@@ -158,8 +231,45 @@ EOF
   exit_repo ${repo}
 }
 
+success_plan_merge () {
+  enter_repo ${repo}
+
+  name=$(ink init .)
+
+  git checkout -q -b a-change
+  touch change.txt
+  git add change.txt
+  git commit -qa -m "added a file"
+  git checkout -q master
+
+  ink plan ${name} a-change >/dev/null
+
+  git checkout -q a-change_${name}
+
+  if [ ! -f change.txt ]; then
+    err "missing merge"
+    exit 1
+  fi
+
+  if [ ! -f ink.plan ]; then
+    err "Missing plan"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink plan" >/dev/null; then
+    err "Failed to find plan commit"
+    git log --oneline
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
 success_apply
+success_apply_merge
+success_apply_merge_sha
 failed_apply
 remote_success_script
 remote_merge
+success_plan_merge
 env_script
