@@ -53,6 +53,14 @@ branch_name () {
   echo "ink-$1"
 }
 
+logger () {
+  local action=$1
+  local date=$( date -u "+%Y%m%d%H%M%S"  )
+
+  mkdir -p ink-logs
+  echo "ink-logs/${date}-ink-${action}.log"
+}
+
 # Parse a repo clone argument and infer what the repo name should be
 extract_repo_name () {
   local regex="([^\/]+)\.git$"
@@ -316,6 +324,7 @@ plan () {
   local branch
   local restore_branch
 
+
   if [ -n "$cb_name" ]; then
     restore_branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -342,8 +351,10 @@ plan () {
     fi
   fi
 
+  local log=$(logger "plan")
+
   if [ -x script/update ]; then
-    if ! script/update; then
+    if ! script/update &>$log; then
       err "Failed to execute update script"
       msg="ink plan [update failed]"
       exit_ret=1
@@ -351,7 +362,7 @@ plan () {
   fi
 
   if [ "$exit_ret" -eq 0 ]; then
-    terraform plan -refresh=false -out=ink.plan
+    terraform plan -refresh=false -no-color -out=ink.plan &>$log
     exit_ret=$?
     if [ "$exit_ret" -eq 0 ]; then
       msg="ink plan"
@@ -405,8 +416,10 @@ apply () {
     fi
   fi
 
+  local log=$(logger "plan")
+
   if [ -x script/update ]; then
-    if ! script/update; then
+    if ! script/update &>$log; then
       err "Failed to execute update script"
       msg="ink ${cmd} [update failed]"
       exit_ret=1
@@ -414,7 +427,7 @@ apply () {
   fi
 
   if [ "$exit_ret" -eq 0 ]; then
-    terraform apply -refresh=false ${plan_file}
+    terraform apply -no-color -refresh=false ${plan_file} &>$log
     exit_ret=$?
     if [ "$exit_ret" -eq 0 ]; then
       msg="ink apply"
