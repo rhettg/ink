@@ -24,6 +24,8 @@ env_args=""
 tf_opts=""
 cb_name="" # Change Branch name (for dealing with changes)
 cb_sha=""
+is_github=0
+github_url=""
 
 # These keep track of if we're running in local repo mode, meaning we're being
 # executed from within a repo and won't be managing the remotes or cloning
@@ -72,6 +74,17 @@ extract_repo_name () {
   fi
 }
 
+# Parse a github clone url and give the <username>/<repo> path
+extract_repo_path () {
+  local regex=".*:(.+)\.git$"
+
+  if [[ "$1" =~ $regex ]]; then
+    echo "${BASH_REMATCH[1]}"
+  else
+    echo $(basename $1)
+  fi
+}
+
 # Handle entering and exiting our repo/branch environment
 # In local mode, we need to much with the current repo, and we want to restore
 # it to how we found it.
@@ -105,6 +118,19 @@ enter_repo () {
         exit 1
       fi
     fi
+  fi
+
+  # We have certain functionality we only want to enable if we are using github
+  # as origin. We can do fancy stuff like provide links to commits.
+  # NOTE: newer git versions provide get-url, which sure would be handy
+  local remote_url=$(git remote -v | grep origin | head -n 1 | awk '{print $2}')
+  if [[ $remote_url == git@github.com:* ]]; then
+    is_github=1
+
+    local path=$(extract_repo_path $remote_url)
+    github_url="https://github.com/${path}"
+  else
+    is_github=0
   fi
 
   export_env_args
@@ -378,14 +404,20 @@ plan () {
   fi
 
   if [ $exit_ret -eq 0 ]; then
-    git log -n 1 --pretty=format:"%h"
+    echo "Plan success!"
+    local sha=$(git log -n 1 --pretty=format:"%h")
+    if [ $is_github -eq 1 ]; then
+      echo "${github_url}/commit/${sha}"
+    else
+      echo "See commit $sha"
+    fi
   else
     err "Plan failed"
     cat $log >&2
   fi
 
   if [ -n "$branch" ] && [ $local_repo -ne 1 ]; then
-    if ! git push origin $branch; then
+    if ! git push origin $branch &>/dev/null; then
       err "Failed to push $branch to origin"
       exit_ret=1
     fi
