@@ -128,6 +128,8 @@ enter_repo () {
     fi
   fi
 
+  log=$(logger "$cmd")
+
   # We have certain functionality we only want to enable if we are using github
   # as origin. We can do fancy stuff like provide links to commits.
   # NOTE: newer git versions provide get-url, which sure would be handy
@@ -562,7 +564,6 @@ fi
 cmd="$1"
 shift
 
-log=$(logger "$cmd")
 
 case $cmd in
 init)
