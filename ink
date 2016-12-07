@@ -381,7 +381,12 @@ plan () {
     exit 1
   fi
 
-  git log -n 1 --pretty=format:"%h"
+  if [ $exit_ret -eq 0 ]; then
+    git log -n 1 --pretty=format:"%h"
+  else
+    err "Plan failed"
+    cat $log >&2
+  fi
 
   if [ -n "$branch" ] && [ $local_repo -ne 1 ]; then
     if ! git push origin $branch; then
