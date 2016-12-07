@@ -85,6 +85,14 @@ extract_repo_path () {
   fi
 }
 
+clone_url () {
+  if [[ $1 == *:* ]]; then
+    echo $1
+  else
+    echo "git@github.com:$1"
+  fi
+}
+
 # Handle entering and exiting our repo/branch environment
 # In local mode, we need to much with the current repo, and we want to restore
 # it to how we found it.
@@ -209,7 +217,7 @@ init () {
     # We actually keep a separate repo for each stack.
     # We could combine stacks for the same repo, but we'd have to sort out
     # concurrency issues. Doable. But skipping for now.
-    git clone -q -- ${remote} ${ink_name}
+    git clone -q -- $(clone_url $remote) ${ink_name}
   fi
 
   enter_repo
