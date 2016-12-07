@@ -100,7 +100,7 @@ enter_repo () {
     fi
 
     if git checkout -q ${branch} &>/dev/null; then
-      if ! git pull origin -q --ff-only &>/dev/null; then
+      if ! git pull -q --ff-only origin; then
         err "Failed to update with origin"
         exit 1
       fi
