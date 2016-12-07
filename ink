@@ -332,28 +332,24 @@ plan () {
 
     branch="${cb_name}_${ink_name}"
     if ! git checkout -q "$branch" 2>/dev/null; then
-      if ! git checkout -q -b "$branch"; then
+      local track_opt
+      if [ $local_repo -ne 1 ]; then
+        track_opt="--track"
+      fi
+
+      if ! git checkout -q -b "$branch" $track_opt; then
         err "Failed to checkout $branch"
         exit 1
       fi
-
-      if [ $local_repo -ne 1 ]; then
-        if ! git push -q -u origin "${branch}" &> /dev/null; then
-          err "Failed to push plan branch to origin"
-          exit 1
-        fi
-      fi
     fi
 
-    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
+    if ! git merge -q -m "Auto-merge via ink apply $cb_name" origin/$cb_name; then
       err "Failed to auto-merge $cb_name"
       git merge --abort
       git checkout -q $restore_branch
       exit 1
     fi
   fi
-
-  local log=$(logger "plan")
 
   if [ -x script/update ]; then
     if ! script/update &>$log; then
@@ -416,14 +412,12 @@ apply () {
       exit 1
     fi
   elif [ -n "$cb_name" ]; then
-    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
+    if ! git merge -q -m "Auto-merge via ink apply $cb_name" origin/$cb_name; then
       git merge --abort
       err "Failed to auto-merge $cb_name"
       exit 1
     fi
   fi
-
-  local log=$(logger "plan")
 
   if [ -x script/update ]; then
     if ! script/update &>$log; then
@@ -514,6 +508,8 @@ fi
 
 cmd="$1"
 shift
+
+log=$(logger "$cmd")
 
 case $cmd in
 init)
