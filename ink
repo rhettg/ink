@@ -247,7 +247,7 @@ destroy () {
 
   enter_repo
 
-  if terraform destroy -force -refresh=false; then
+  if [ ! -f terraform.tfstate ] || terraform destroy -force -refresh=false; then
     #if [ $local_repo -ne 1 ]; then
       # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
@@ -274,6 +274,8 @@ destroy () {
     else
       git branch -q -D ${branch}
     fi
+
+    echo "Destroyed ${ink_name}"
   else
     err "Failed destroying"
     exit_repo
