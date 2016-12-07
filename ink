@@ -449,14 +449,27 @@ apply () {
     exit 1
   fi
 
+  if [ $exit_ret -eq 0 ]; then
+    echo "Apply success!"
+  else
+    err "Apply failed"
+    cat $log >&2
+  fi
+
+  sha=$(git log -n 1 --pretty=format:"%h")
+  if [ $is_github -eq 1 ]; then
+    echo "See ${github_url}/commit/${sha} for logs"
+  else
+    echo "See commit $sha"
+  fi
+
   exit_repo
 }
 
 output () {
   enter_repo
 
-  # No sense exiting right away, we need to cleanup
-  terraform output
+  terraform output -no-color
   exit_ret=$?
 
   # For a query, we want to throw any changes.
