@@ -538,12 +538,12 @@ destroy)
 apply)
   ink_name=$1
   cb_name=$2
+  cb_sha=$3
   apply
   ;;
 plan)
   ink_name=$1
   cb_name=$2
-  cb_sha=$3
   plan
   ;;
 refresh|get)
