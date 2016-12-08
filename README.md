@@ -68,11 +68,10 @@ You can customize the naming by specifying the special `ink_id` variable.
     $ ink init git@github.com:github/octobatman.git ink_id=production
     octobatman-production
 
-Or you can completely override the naming system by using the above envionment facilities
+Or you can completely override the naming system:
 
     $ ink init git@github.com:github/octobatman.git ink_name=alfred
     alfred
-
 
 ## Making Changes
 
@@ -92,7 +91,8 @@ To fully understand the impact of your changes, you'll want to generate a plan
 against at least one of your Ink stacks.
 
     $ ink plan octobatman-d88f7 sg-fix
-    sg-fix_octobatman-d88f7/48215ab
+    Plan success!
+    https://github.com/github/octobatman/commits/48215ab
 
 This has created a new branch based on the stack `octobatman-d88f7`, merged in
 your changes in `sg-fix` and run `terraform plan`. The outputted SHA is revision
@@ -101,7 +101,6 @@ so you can later ensure you are applying the same changes.
 If you're satisifed with these changes, you can then apply them:
 
     $ ink apply octobatman-d88f7 sg-fix 48215ab
-
 
 This will use the same plan generated above and merge your changes into the stack.
 
@@ -118,7 +117,7 @@ don't always make sense in a remote context.
   * `ink init <git repository>` - Clone a repository and configure a new ink branch.
   * `ink refresh <name> []` - Run `terraform refresh`
   * `ink plan <name> [branch]` - Generate a plan file for any changes in the branch.
-  * `ink apply <name> [branch]` - Apply changes in the branch, using a plan file if available.
+  * `ink apply <name> [branch] [sha]` - Apply changes in the branch, using a plan file if available.
   * `ink output <name>` - Run `terraform output`
   * `ink list` - Show available ink stacks
 
@@ -157,10 +156,8 @@ Run ink from inside the repository starting with:
 
     $ ink init .
 
-
 ### TODO
 
   - [ ] Lockfile for server mode
   - [ ] More helpful ink-env vars
-  - [ ] Might be interesting to store logs
   - [ ] TTL
