@@ -89,7 +89,17 @@ clone_url () {
   if [[ $1 == *:* ]]; then
     echo $1
   else
-    echo "git@github.com:$1"
+    echo "git@github.com:$1.git"
+  fi
+}
+
+# Show the most recent SHA
+see_commit_msg () {
+  local sha=$(git log -n 1 --pretty=format:"%h")
+  if [ $is_github -eq 1 ]; then
+    echo "${github_url}/commit/${sha}"
+  else
+    echo "See commit $sha"
   fi
 }
 
@@ -283,7 +293,7 @@ destroy () {
 
   enter_repo
 
-  if [ ! -f terraform.tfstate ] || terraform destroy -force -refresh=false; then
+  if [ ! -f terraform.tfstate ] || terraform destroy -no-color -force -refresh=false &>$log; then
     #if [ $local_repo -ne 1 ]; then
       # We'll just log but otherwise ignore errors in here. If our cleanup fails...
       # is that worth bailing? Maybe not.
@@ -300,9 +310,25 @@ destroy () {
         #err "Failed to delete remote branch"
       #fi
     #fi
+    msg="ink destroy"
+    echo "Destroyed ${ink_name}"
+  else
+    err "Failed destroying ${ink_name}"
+    msg="ink destroy [failed]"
+    exit_ret=1
+  fi
 
-    exit_repo
+  git add -A .
+  if ! git commit -q --allow-empty -m "${msg}"; then
+    err "Failed to commit"
+    exit 1
+  fi
 
+  see_commit_msg
+
+  exit_repo
+
+  if [ $exit_ret -eq 0 ]; then
     if [ $local_repo -ne 1 ]; then
       # Since for now, our layout is based on the name of the stack, we'll just
       # wipe out the repo.
@@ -310,11 +336,6 @@ destroy () {
     else
       git branch -q -D ${branch}
     fi
-
-    echo "Destroyed ${ink_name}"
-  else
-    err "Failed destroying"
-    exit_repo
   fi
 }
 
@@ -415,12 +436,7 @@ plan () {
 
   if [ $exit_ret -eq 0 ]; then
     echo "Plan success!"
-    local sha=$(git log -n 1 --pretty=format:"%h")
-    if [ $is_github -eq 1 ]; then
-      echo "${github_url}/commit/${sha}"
-    else
-      echo "See commit $sha"
-    fi
+    see_commit_msg
   else
     err "Plan failed"
     cat $log >&2
@@ -498,12 +514,7 @@ apply () {
     cat $log >&2
   fi
 
-  sha=$(git log -n 1 --pretty=format:"%h")
-  if [ $is_github -eq 1 ]; then
-    echo "See ${github_url}/commit/${sha} for logs"
-  else
-    echo "See commit $sha"
-  fi
+  see_commit_msg
 
   exit_repo
 }
