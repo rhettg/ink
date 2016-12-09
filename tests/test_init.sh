@@ -21,10 +21,50 @@ init_local () {
     exit 1
   fi
 
+  if [ ! -f .ink-env ]; then
+    err "Failed to find ink file"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink init" >/dev/null; then
+    err "Failed to find init commit"
+    git log --oneline
+    exit 1
+  fi
+
+  exit_repo ${repo}
+}
+
+init_local_branch () {
+  enter_repo ${repo}
+
+  name=$(ink init . ink_id=fizz)
+  if [ -z "$name" ]; then
+    err "No name"
+    exit 1
+  fi
+
+  if [ ! "$name" = "test_repo-fizz" ]; then
+    err "Incorrect name ${name}"
+    exit 1
+  fi
+
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  if [[ "${branch}" != "master" ]]; then
+    err "Current branch should be master"
+    exit 1
+  fi
+
   git checkout -q "ink-${name}"
 
-  if [ ! -f .ink ]; then
+  if [ ! -f .ink-env ]; then
     err "Failed to find ink file"
+    exit 1
+  fi
+
+  if ! git log --oneline | head -1 | grep "ink init" >/dev/null; then
+    err "Failed to find init commit"
+    git log --oneline
     exit 1
   fi
 
@@ -34,9 +74,44 @@ init_local () {
 init_remote () {
   enter_remote
 
-  build_repo "A"
+  build_repo ".A"
 
-  name=$(ink init ./A)
+  name=$(ink init ./.A)
+  if [ -z $name ]; then
+    err "No name"
+    exit 1
+  fi
+
+  if [ ! -d ${name} ]; then
+    err "Missing checkout"
+    exit 1
+  fi
+
+  cd ${name}
+
+  if [ ! -f .ink-env ]; then
+    err "Failed to find ink file"
+    exit 1
+  fi
+
+  cd ..
+
+  cd .A
+  if [ ! -f .ink-env ]; then
+    err "Failed to find ink file"
+    exit 1
+  fi
+  cd ..
+
+  exit_remote
+}
+
+init_remote_branch () {
+  enter_remote
+
+  build_repo ".A"
+
+  name=$(ink init ./.A)
   if [ -z $name ]; then
     err "No name"
     exit 1
@@ -58,7 +133,7 @@ init_remote () {
 
   cd ..
 
-  cd A
+  cd .A
   if ! git branch | grep ${name} >/dev/null; then
     err "No branch in remote"
     exit 1
@@ -169,8 +244,10 @@ EOF
 }
 
 init_local
-init_remote
-init_with_args
-init_with_name
-init_with_id
-init_with_setup
+#init_local_branch
+#init_remote
+#init_remote_branch
+#init_with_args
+#init_with_name
+#init_with_id
+#init_with_setup

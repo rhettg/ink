@@ -9,7 +9,7 @@ repo="test_repo"
 success_apply () {
   enter_repo ${repo}
 
-  name=$(ink init .)
+  name=$(ink init . | awk '{print $2}')
   ink apply ${name}
 
   git checkout -q ink-${name}

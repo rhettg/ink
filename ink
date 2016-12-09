@@ -19,6 +19,7 @@ fi
 # Fun Globals to keep track of
 ink_name=""
 ink_id=""
+ink_branch=""
 exit_ret=0
 env_args=""
 tf_opts=""
@@ -38,21 +39,6 @@ export TF_INPUT=0
 help () {
   echo "Usage: $(basename $0) <init|list|plan|apply|destroy|help>"
   exit 1
-}
-
-build_name () {
-  if [ -n "$ink_name" ]; then
-    echo "$ink_name"
-  elif [ -n "$ink_id" ]; then
-    echo "$1-$ink_id"
-  else
-    ink_id=$(head /dev/urandom | md5sum | cut -c1-5)
-    echo "$1-$ink_id"
-  fi
-}
-
-branch_name () {
-  echo "ink-$1"
 }
 
 logger () {
@@ -116,34 +102,22 @@ enter_repo () {
     exit 1
   fi
 
-  local branch="$(branch_name "${ink_name}")"
-
   if [ $local_repo -eq 1 ]; then
     start_branch=$(git rev-parse --abbrev-ref HEAD)
-
-    # Our working branch *might* already exist
-    git checkout -q ${branch} &>/dev/null || true
   else
     pushd ${ink_name} &> /dev/null
+
     if ! git fetch -q origin; then
       err "Failed to fetch from origin"
       exit 1
     fi
-
-    if git checkout -q ${branch} &>/dev/null; then
-      if ! git pull -q --ff-only origin; then
-        err "Failed to update with origin"
-        exit 1
-      fi
-    fi
   fi
 
-  log=$(logger "$cmd")
+  # NOTE: newer git versions provide get-url, which sure would be handy
+  local remote_url=$(git remote -v | grep origin | head -n 1 | awk '{print $2}')
 
   # We have certain functionality we only want to enable if we are using github
   # as origin. We can do fancy stuff like provide links to commits.
-  # NOTE: newer git versions provide get-url, which sure would be handy
-  local remote_url=$(git remote -v | grep origin | head -n 1 | awk '{print $2}')
   if [[ $remote_url == git@github.com:* ]]; then
     is_github=1
 
@@ -153,14 +127,41 @@ enter_repo () {
     is_github=0
   fi
 
+  local repo
+  if [ $local_repo -eq 1 ]; then
+    repo=$(basename $(pwd))
+  else
+    repo=$(extract_repo_name $remote_url)
+  fi
+
+  if [ "$ink_name" == "$repo" ]; then
+    ink_branch="master"
+  else
+    ink_branch="$ink_name"
+  fi
+
+  if ! git checkout -q ${ink_branch} &>/dev/null; then
+    err "Failed to checkout ${ink_branch}"
+    exit 1
+  fi
+
+  if [ $local_repo -eq 0 ]; then
+    if ! git pull -q --ff-only origin; then
+      err "Failed to update with origin"
+      exit 1
+    fi
+  fi
+
+  # This can only be done after we are in our repository context as it might
+  # create an ink-logs directory.
+  log=$(logger "$cmd")
+
   export_env_args
 }
 
 exit_repo () {
-  local branch="$(branch_name "${ink_name}")"
-
   if git rev-parse --abbrev-ref --symbolic-full-name @{u} &>/dev/null; then
-    if ! git push -q origin "${branch}" ; then
+    if ! git push -q origin "${ink_branch}" ; then
       err "Failed to push changes to origin"
     fi
   fi
@@ -222,8 +223,21 @@ init () {
   fi
 
   load_env_args_name
-  ink_name=$(build_name "${repo}")
-  local branch="$(branch_name "${ink_name}")"
+  if [ -z "$ink_name" ]; then
+    if [ -n "$ink_id" ]; then
+      ink_name="$repo-$ink_id"
+    else
+      # Neither name or id has been specified, so we're naming everything
+      # after the repo and using 'master' as our branch.
+      ink_id="$repo"
+      ink_name="$repo"
+      ink_branch="master"
+    fi
+  fi
+
+  if [ -z "$ink_branch" ]; then
+    ink_branch="ink-${ink_name}"
+  fi
 
   if [ $local_repo -ne 1 ]; then
     # We actually keep a separate repo for each stack.
@@ -239,25 +253,17 @@ init () {
     exit 1
   fi
 
-  if ! git checkout -q -b ${branch}; then
-    err "Failed to create branch ${branch}"
-    exit 1
+  if ! git checkout -q ${ink_branch} 2>/dev/null; then
+    if ! git checkout -q -b ${ink_branch}; then
+      err "Failed to create branch ${branch}"
+      exit 1
+    fi
   fi
-
-  if [ -f .ink ]; then
-    err "Ink state file already exists"
-    exit 1
-  fi
-
-  touch .ink
-  git add .ink
 
   echo "TF_VAR_ink_name=${ink_name}" >> .ink-env
 
   save_env_args
-  if [ -f ./.ink-env ]; then
-    git add ./.ink-env
-  fi
+  git add ./.ink-env
 
   export_env_args
 
@@ -282,15 +288,14 @@ init () {
   if [ $local_repo -ne 1 ]; then
     git push -q -u origin "${branch}" &> /dev/null
   fi
-  echo "${ink_name}"
+
+  echo "Created ${ink_name}"
 
   exit_repo
 }
 
 # Shutdown and remove an existing ink stack
 destroy () {
-  local branch="$(branch_name "${ink_name}")"
-
   enter_repo
 
   if [ ! -f terraform.tfstate ] || terraform destroy -no-color -force -refresh=false &>$log; then
@@ -333,8 +338,6 @@ destroy () {
       # Since for now, our layout is based on the name of the stack, we'll just
       # wipe out the repo.
       rm -rf "${ink_name}"
-    else
-      git branch -q -D ${branch}
     fi
   fi
 }
@@ -380,22 +383,18 @@ plan () {
   enter_repo
 
   local msg
-  local branch
-  local restore_branch
-
+  local plan_branch
 
   if [ -n "$cb_name" ]; then
-    restore_branch=$(git rev-parse --abbrev-ref HEAD)
-
-    branch="${cb_name}_${ink_name}"
-    if ! git checkout -q "$branch" 2>/dev/null; then
+    plan_branch="${cb_name}_${ink_name}"
+    if ! git checkout -q "$plan_branch" 2>/dev/null; then
       local track_opt
       if [ $local_repo -ne 1 ]; then
         track_opt="--track"
       fi
 
-      if ! git checkout -q -b "$branch" $track_opt; then
-        err "Failed to checkout $branch"
+      if ! git checkout -q -b "$plan_branch" $track_opt; then
+        err "Failed to checkout $plan_branch"
         exit 1
       fi
     fi
@@ -403,7 +402,7 @@ plan () {
     if ! git merge -q -m "Auto-merge via ink apply $cb_name" origin/$cb_name; then
       err "Failed to auto-merge $cb_name"
       git merge --abort
-      git checkout -q $restore_branch
+      git checkout -q $ink_branch
       exit 1
     fi
   fi
@@ -442,15 +441,16 @@ plan () {
     cat $log >&2
   fi
 
-  if [ -n "$branch" ] && [ $local_repo -ne 1 ]; then
-    if ! git push origin $branch &>/dev/null; then
-      err "Failed to push $branch to origin"
+  if [ -n "$plan_branch" ] && [ $local_repo -ne 1 ]; then
+    if ! git push origin $plan_branch &>/dev/null; then
+      err "Failed to push $plan_branch to origin"
       exit_ret=1
     fi
   fi
 
-  if [ -n "$restore_branch" ]; then
-    git checkout -q $restore_branch
+  # Restore to original branch
+  if [ -n "$plan_branch" ]; then
+    git checkout -q $ink_branch
   fi
 
   exit_repo

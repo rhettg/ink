@@ -82,7 +82,7 @@ and `staging`, and maybe even one-off experiments like `lab-abcd`.
 
 Ink can power this workflow by supporting multiple environments through branching.
 
-    $ ink init git@github.com:github/octobatman.git id=production
+    $ ink init git@github.com:github/octobatman.git ink_id=production
     Created octobatman-production
 
 If you check your repo's origin, you'll see an important addition: A new branch
@@ -94,7 +94,7 @@ multiple environments you have some more options.
 
 To test your change in an alternate environment first:
 
-    $ ink init github/octobatman id=sg-fix-test
+    $ ink init github/octobatman ink_id=sg-fix-test
     Created octobatman-sg-fix-test
 
     $ ink apply octobatman-sg-fix-test
