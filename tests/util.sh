@@ -40,6 +40,20 @@ build_repo () {
   cd ..
 }
 
+build_remote_repo () {
+  local remote=$1
+  local repo=$2
+
+  cd ./$remote
+
+  mkdir ${repo}
+  cd ${repo}
+  git init -q .
+  git commit -q --allow-empty -m "initial commit for ${repo}"
+  git checkout -q --detach
+  cd ../..
+}
+
 ink_init () {
   echo "$(ink init $@ | awk '{print $2}')"
 }

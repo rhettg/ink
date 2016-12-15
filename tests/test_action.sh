@@ -128,11 +128,7 @@ failed_apply () {
 
 remote_success () {
   local remote=$(build_remote)
-  cd $remote
-  build_repo "A"
-  cd A
-  git checkout --detach
-  cd ../..
+  build_remote_repo $remote "A"
 
   name=$(ink_init ./$remote/A)
   ink apply ${name}
@@ -167,26 +163,24 @@ remote_success () {
 
 # Verifying that our action merges in updates from origin
 remote_merge () {
-  enter_remote
-  build_repo "A"
-  name=$(ink_init ./A)
+  local remote=$(build_remote)
+  build_remote_repo $remote "A"
+
+  name=$(ink_init ./$remote/A)
 
   ink apply ${name}
 
-  cd A
+  cd $remote/A
 
-
-  git checkout -q ink-${name}
-  git commit -q --allow-empty -m "test update"
   git checkout -q master
+  git commit -q --allow-empty -m "test update"
+  git checkout -q --detach
 
-  cd ..
+  cd ../..
 
   ink apply ${name}
 
   cd ${name}
-
-  git checkout -q ink-${name}
 
   if ! git log --oneline | grep "test update" >/dev/null; then
     err "Failed to find update"
@@ -196,7 +190,8 @@ remote_merge () {
 
   cd ..
 
-  exit_remote
+  rm -rf ./$remote
+  rm -rf ./A
 }
 
 env_script () {
@@ -219,8 +214,6 @@ EOF
     err "apply failed"
     exit 1
   fi
-
-  git checkout -q ink-${name}
 
   if [ ! -f fizz.db ]; then
     err "setup didnt' run"
@@ -266,13 +259,13 @@ success_plan_merge () {
 
 rm -rf tmp && mkdir tmp
 cd tmp
-#success_apply
-##success_apply_merge
-#success_apply_merge_sha
-#failed_apply
+success_apply
+success_apply_merge
+success_apply_merge_sha
+failed_apply
 remote_success
-#remote_merge
-#success_plan_merge
-#env_script
+remote_merge
+success_plan_merge
+env_script
 cd ..
 rm -rf tmp
