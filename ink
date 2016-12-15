@@ -24,7 +24,7 @@ exit_ret=0
 env_args=""
 tf_opts=""
 cb_name="" # Change Branch name (for dealing with changes)
-cb_sha=""
+cb_ref=""
 is_github=0
 github_url=""
 
@@ -72,7 +72,7 @@ extract_repo_path () {
 }
 
 clone_url () {
-  if [[ $1 == *:* ]]; then
+  if [[ $1 == *:* ]] || [ -d $1 ]; then
     echo $1
   else
     echo "git@github.com:$1.git"
@@ -137,18 +137,26 @@ enter_repo () {
   if [ "$ink_name" == "$repo" ]; then
     ink_branch="master"
   else
-    ink_branch="$ink_name"
+    ink_branch="ink-$ink_name"
   fi
 
-  if ! git checkout -q ${ink_branch} &>/dev/null; then
-    err "Failed to checkout ${ink_branch}"
-    exit 1
-  fi
+  if ! git checkout -q ${ink_branch} 2>/dev/null; then
+    # It might just not exist yet
+    local track_opt
+    if [ $local_repo -eq 0 ]; then
+      track_opt="--track"
+    fi
 
-  if [ $local_repo -eq 0 ]; then
-    if ! git pull -q --ff-only origin; then
-      err "Failed to update with origin"
+    if ! git checkout -q -b ${ink_branch} $track_opt; then
+      err "Failed to create branch ${branch}"
       exit 1
+    fi
+  else
+    if [ $local_repo -eq 0 ]; then
+      if ! git pull -q --ff-only origin ${ink_branch}; then
+        err "Failed to update with origin"
+        exit 1
+      fi
     fi
   fi
 
@@ -251,13 +259,6 @@ init () {
   if ! _=$(git status); then
     err "Not a git repository"
     exit 1
-  fi
-
-  if ! git checkout -q ${ink_branch} 2>/dev/null; then
-    if ! git checkout -q -b ${ink_branch}; then
-      err "Failed to create branch ${branch}"
-      exit 1
-    fi
   fi
 
   echo "TF_VAR_ink_name=${ink_name}" >> .ink-env
@@ -399,7 +400,7 @@ plan () {
       fi
     fi
 
-    if ! git merge -q -m "Auto-merge via ink apply $cb_name" origin/$cb_name; then
+    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
       err "Failed to auto-merge $cb_name"
       git merge --abort
       git checkout -q $ink_branch
@@ -464,15 +465,9 @@ apply () {
 
   enter_repo
 
-  if [ -n "$cb_sha" ]; then
-    if ! git merge -q --ff-only $cb_sha; then
-      err "Failed to merge $cb_sha"
-      exit 1
-    fi
-  elif [ -n "$cb_name" ]; then
-    if ! git merge -q -m "Auto-merge via ink apply $cb_name" origin/$cb_name; then
-      git merge --abort
-      err "Failed to auto-merge $cb_name"
+  if [ -n "$cb_ref" ]; then
+    if ! git merge -q --ff-only $cb_ref; then
+      err "Failed to merge $cb_ref"
       exit 1
     fi
   fi
@@ -589,8 +584,7 @@ destroy)
   ;;
 apply)
   ink_name=$1
-  cb_name=$2
-  cb_sha=$3
+  cb_ref=$2
   apply
   ;;
 plan)

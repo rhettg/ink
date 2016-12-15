@@ -9,10 +9,9 @@ repo="test_repo"
 success_apply () {
   enter_repo ${repo}
 
-  name=$(ink init . | awk '{print $2}')
-  ink apply ${name}
+  name=$(ink_init .)
+  ink apply ${name} &>/dev/null
 
-  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
@@ -30,7 +29,7 @@ success_apply () {
 success_apply_merge () {
   enter_repo ${repo}
 
-  name=$(ink init .)
+  name=$(ink_init .)
 
   git checkout -q -b a-change
   touch change.txt
@@ -38,9 +37,8 @@ success_apply_merge () {
   git commit -qa -m "added a file"
   git checkout -q master
 
-  ink apply ${name} a-change
+  ink apply ${name} a-change &>/dev/null
 
-  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
@@ -63,7 +61,7 @@ success_apply_merge () {
 success_apply_merge_sha () {
   enter_repo ${repo}
 
-  name=$(ink init .)
+  name=$(ink_init .)
 
   git checkout -q -b a-change
   touch change.txt
@@ -71,23 +69,22 @@ success_apply_merge_sha () {
   git commit -qa -m "added a file"
   git checkout -q master
 
-  sha=$(ink plan ${name} a-change)
+  sha=$(ink plan ${name} a-change | tail -n 1 | awk '{print $3}')
 
   if [ -z "$sha" ]; then
     err "Missing sha"
     exit 1
   fi
 
-  ink apply ${name} a-change $sha
+  ink apply ${name} $sha
 
-  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
-    err "Create didn't run"
+    err "Apply didn't run"
     exit 1
   fi
 
   if [ ! -f change.txt ]; then
-    err "missing merge"
+    err "Missing our change"
     exit 1
   fi
 
@@ -103,11 +100,11 @@ success_apply_merge_sha () {
 failed_apply () {
   enter_repo ${repo}
 
-  name=$(ink init .)
+  name=$(ink_init .)
 
   export INK_TEST_EXIT=1
 
-  if ink apply ${name}; then
+  if ink apply ${name} &>/dev/null; then
     err "Create should have failed"
     exit 1
   fi
@@ -117,8 +114,6 @@ failed_apply () {
     err "Current branch should be master"
     exit 1
   fi
-
-  git checkout -q ink-${name}
 
   if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
     err "Failed to find apply commit"
@@ -131,16 +126,19 @@ failed_apply () {
   exit_repo ${repo}
 }
 
-remote_success_script () {
-  enter_remote
+remote_success () {
+  local remote=$(build_remote)
+  cd $remote
   build_repo "A"
+  cd A
+  git checkout --detach
+  cd ../..
 
-  name=$(ink init ./A)
+  name=$(ink_init ./$remote/A)
   ink apply ${name}
 
   cd ${name}
 
-  git checkout -q ink-${name}
   if [ ! -f state.db ]; then
     err "Create didn't run"
     exit 1
@@ -152,8 +150,8 @@ remote_success_script () {
     exit 1
   fi
 
-  cd ../A
-  git checkout -q ink-${name}
+  cd ../$remote/A
+  git checkout -q master
 
   if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
     err "Failed to find apply commit in origin"
@@ -163,14 +161,15 @@ remote_success_script () {
 
   cd ..
 
-  exit_remote
+  rm -rf ./$remote
+  rm -rf A
 }
 
 # Verifying that our action merges in updates from origin
 remote_merge () {
   enter_remote
   build_repo "A"
-  name=$(ink init ./A)
+  name=$(ink_init ./A)
 
   ink apply ${name}
 
@@ -214,7 +213,7 @@ EOF
   git add script
   git commit -q -m "added setup script"
 
-  name=$(ink init . foo=fizz)
+  name=$(ink_init . foo=fizz)
 
   if ! ink apply ${name}; then
     err "apply failed"
@@ -234,7 +233,7 @@ EOF
 success_plan_merge () {
   enter_repo ${repo}
 
-  name=$(ink init .)
+  name=$(ink_init .)
 
   git checkout -q -b a-change
   touch change.txt
@@ -265,11 +264,15 @@ success_plan_merge () {
   exit_repo ${repo}
 }
 
-success_apply
-success_apply_merge
-success_apply_merge_sha
-failed_apply
-remote_success_script
-remote_merge
-success_plan_merge
-env_script
+rm -rf tmp && mkdir tmp
+cd tmp
+#success_apply
+##success_apply_merge
+#success_apply_merge_sha
+#failed_apply
+remote_success
+#remote_merge
+#success_plan_merge
+#env_script
+cd ..
+rm -rf tmp

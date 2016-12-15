@@ -19,7 +19,7 @@ exit_repo () {
   rm -rf $1
 }
 
-enter_remote () {
+build_remote () {
   local remote_path="test_remote"
   if [ -d ${remote_path} ]; then
     rm -rf ${remote_path}
@@ -27,14 +27,7 @@ enter_remote () {
 
   mkdir ${remote_path}
 
-  cd ${remote_path}
-}
-
-exit_remote () {
-  local remote=$( basename `pwd` )
-  cd ..
-
-  rm -rf ./$remote
+  echo $remote_path
 }
 
 build_repo () {
@@ -46,3 +39,8 @@ build_repo () {
   git commit -q --allow-empty -m "initial commit for ${repo}"
   cd ..
 }
+
+ink_init () {
+  echo "$(ink init $@ | awk '{print $2}')"
+}
+
