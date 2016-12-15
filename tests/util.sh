@@ -1,3 +1,13 @@
+setup () {
+  rm -rf tmp && mkdir tmp
+  cd tmp
+}
+
+teardown () {
+  cd ..
+  rm -rf tmp
+}
+
 err () {
   echo $1 >&2
 }
@@ -20,7 +30,7 @@ exit_repo () {
 }
 
 build_remote () {
-  local remote_path="test_remote"
+  local remote_path=".test_remote"
   if [ -d ${remote_path} ]; then
     rm -rf ${remote_path}
   fi

@@ -9,8 +9,8 @@ repo="test_repo"
 local_list () {
   enter_repo ${repo}
 
-  ink init . >/dev/null
-  ink init . >/dev/null
+  ink init . ink_id=foo >/dev/null
+  ink init . ink_id=bar >/dev/null
 
   repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then
@@ -21,9 +21,12 @@ local_list () {
 }
 
 remote_list () {
-  enter_remote
-  build_repo "A"
-  build_repo "B"
+  local remote=$(build_remote)
+  build_remote_repo $remote "A"
+  build_remote_repo $remote "B"
+
+  name=$(ink_init ./$remote/A)
+  name=$(ink_init ./$remote/B)
 
   repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then
@@ -32,8 +35,13 @@ remote_list () {
     exit 1
   fi
 
-  exit_remote
+  rm -rf ./$remote
+  rm -rf ./A ./B
 }
+
+setup
 
 local_list
 remote_list
+
+teardown

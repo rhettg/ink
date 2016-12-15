@@ -76,7 +76,7 @@ success_apply_merge_sha () {
     exit 1
   fi
 
-  ink apply ${name} $sha
+  ink apply ${name} $sha &>/dev/null
 
   if [ ! -f state.db ]; then
     err "Apply didn't run"
@@ -131,7 +131,7 @@ remote_success () {
   build_remote_repo $remote "A"
 
   name=$(ink_init ./$remote/A)
-  ink apply ${name}
+  ink apply ${name} &>/dev/null
 
   cd ${name}
 
@@ -168,7 +168,7 @@ remote_merge () {
 
   name=$(ink_init ./$remote/A)
 
-  ink apply ${name}
+  ink apply ${name} &>/dev/null
 
   cd $remote/A
 
@@ -178,7 +178,7 @@ remote_merge () {
 
   cd ../..
 
-  ink apply ${name}
+  ink apply ${name} &>/dev/null
 
   cd ${name}
 
@@ -210,7 +210,7 @@ EOF
 
   name=$(ink_init . foo=fizz)
 
-  if ! ink apply ${name}; then
+  if ! ink apply ${name} &>/dev/null; then
     err "apply failed"
     exit 1
   fi
@@ -257,8 +257,8 @@ success_plan_merge () {
   exit_repo ${repo}
 }
 
-rm -rf tmp && mkdir tmp
-cd tmp
+setup
+
 success_apply
 success_apply_merge
 success_apply_merge_sha
@@ -267,5 +267,5 @@ remote_success
 remote_merge
 success_plan_merge
 env_script
-cd ..
-rm -rf tmp
+
+teardown

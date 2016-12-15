@@ -8,12 +8,12 @@ repo="test_repo"
 
 enter_repo ${repo}
 
-name=$(ink init .)
+name=$(ink_init .)
 
-ink apply ${name}
+ink apply ${name} &>/dev/null
 
 output=$(ink output ${name})
-if [[ "$output" != "apply -refresh=false" ]]; then
+if [[ "$output" != "apply -no-color -refresh=false" ]]; then
   err "Bad output: ${output}"
   exit 1
 fi
@@ -23,8 +23,6 @@ if [[ "${branch}" != "master" ]]; then
   err "Current branch should be master"
   exit 1
 fi
-
-git checkout -q ink-${name}
 
 if ! git log --oneline | head -1 | grep "ink apply" >/dev/null; then
   err "Should not have added commit"
