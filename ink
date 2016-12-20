@@ -463,7 +463,7 @@ plan () {
 
     # Cleanup after ourselves
     if [ $local_repo -ne 1 ]; then
-      if ! git branch -D $plan_branch; then
+      if ! git branch -qD $plan_branch; then
         err "Failed to delete $plan_branch"
       fi
     fi
