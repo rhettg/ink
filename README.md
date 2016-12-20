@@ -183,6 +183,8 @@ Run ink from inside the repository starting with:
 
 ### TODO
 
+  - [ ] auto-cleanup remote plan branches
+  - [ ] Restore (re-init) existing branches
   - [ ] Lockfile for server mode
   - [ ] More helpful ink-env vars
   - [ ] TTL
