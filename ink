@@ -107,7 +107,7 @@ enter_repo () {
   else
     pushd ${ink_name} &> /dev/null
 
-    if ! git fetch -q origin; then
+    if ! git fetch -qp origin; then
       err "Failed to fetch from origin"
       exit 1
     fi
@@ -400,8 +400,15 @@ plan () {
       fi
     fi
 
-    if ! git merge -q -m "Auto-merge via ink apply $cb_name" $cb_name; then
-      err "Failed to auto-merge $cb_name"
+    local cb_branch_ref="$cb_name"
+    if [ $local_repo -ne 1 ] && [[ $cb_branch_ref != origin/* ]]; then
+      # If we are using a remote, merge needs to know it (unlike checkout which
+      # does it for free)
+      cb_branch_ref="origin/${cb_name}"
+    fi
+
+    if ! git merge -q -m "Auto-merge via ink apply $cb_branch_ref" $cb_branch_ref; then
+      err "Failed to auto-merge $cb_branch_ref"
       git merge --abort
       git checkout -q $ink_branch
       exit 1
@@ -447,11 +454,19 @@ plan () {
       err "Failed to push $plan_branch to origin"
       exit_ret=1
     fi
+
   fi
 
   # Restore to original branch
   if [ -n "$plan_branch" ]; then
     git checkout -q $ink_branch
+
+    # Cleanup after ourselves
+    if [ $local_repo -ne 1 ]; then
+      if ! git branch -D $plan_branch; then
+        err "Failed to delete $plan_branch"
+      fi
+    fi
   fi
 
   exit_repo
