@@ -332,9 +332,9 @@ destroy () {
 
   if [ $local_repo -eq 1 ]; then
     cat $log
-  else
-    see_commit_msg
   fi
+
+  see_commit_msg
 
   exit_repo
 
@@ -449,9 +449,8 @@ plan () {
     echo "Plan success!"
     if [ $local_repo -eq 1 ]; then
       cat $log
-    else
-      see_commit_msg
     fi
+    see_commit_msg
   else
     err "Plan failed"
     cat $log >&2
@@ -534,9 +533,9 @@ apply () {
 
   if [ $local_repo -eq 1 ]; then
     cat $log
-  else
-    see_commit_msg
   fi
+
+  see_commit_msg
 
   exit_repo
 }
