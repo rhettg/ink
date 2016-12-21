@@ -146,6 +146,7 @@ don't always make sense in a remote context.
   * `ink apply <name> [rev]` - Apply changes in the branch, using a plan file if available.
   * `ink output <name>` - Run `terraform output`
   * `ink list` - Show available ink projects
+  * `ink key` - Display SSH public key to authorize ink for use in your repo.
 
 ## Scripts and Extensions
 
@@ -184,7 +185,6 @@ Run ink from inside the repository starting with:
 ### TODO
 
   - [ ] auto-cleanup remote plan branches
-  - [ ] Restore (re-init) existing branches
   - [ ] Lockfile for server mode
   - [ ] More helpful ink-env vars
   - [ ] TTL

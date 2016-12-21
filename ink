@@ -37,7 +37,7 @@ local_repo=0
 export TF_INPUT=0
 
 help () {
-  echo "Usage: $(basename $0) <init|list|plan|apply|destroy|help>"
+  echo "Usage: $(basename $0) <init|list|plan|apply|destroy|key|help>"
   exit 1
 }
 
@@ -560,6 +560,16 @@ output () {
   exit_repo
 }
 
+# For remote usage, provide the SSH Identity for easy repo configuration.
+display_key () {
+  if [ -f "$HOME/.ssh/id_rsa.pub" ]; then
+    cat "$HOME/.ssh/id_rsa.pub"
+  else
+    err "Failed to find SSH identity"
+    exit 1
+  fi
+}
+
 # List available stacks
 show_stacks () {
   if [ -d .git ]; then
@@ -587,6 +597,9 @@ if [ $# -lt 2 ]; then
   if [[ $1 == "list" ]]; then
     show_stacks
     exit $exit_ret
+  elif [[ $1 == "key" ]]; then
+    display_key
+    exit $exit_Ret
   else
     err "$1 what?"
     help
@@ -595,7 +608,6 @@ fi
 
 cmd="$1"
 shift
-
 
 case $cmd in
 init)
