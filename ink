@@ -82,7 +82,7 @@ clone_url () {
 # Show the most recent SHA
 see_commit_msg () {
   local sha=$(git log -n 1 --pretty=format:"%h")
-  if [ $is_github -eq 1 ]; then
+  if [ $is_github -eq 1 ] && [ $local_repo -ne 1 ]; then
     echo "${github_url}/commit/${sha}"
   else
     echo "See commit $sha"
