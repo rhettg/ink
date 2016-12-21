@@ -330,6 +330,12 @@ destroy () {
     exit_ret=1
   fi
 
+  # Just in case this was left over from some plan, this should avoid confusing
+  # apply behavior later on.
+  if [ -f ink.plan ]; then
+    git rm -q ink.plan
+  fi
+
   git add -A .
   if ! git commit -q --allow-empty -m "${msg}"; then
     err "Failed to commit"
