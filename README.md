@@ -186,5 +186,4 @@ Run ink from inside the repository starting with:
 
   - [ ] auto-cleanup remote plan branches
   - [ ] Lockfile for server mode
-  - [ ] More helpful ink-env vars
   - [ ] TTL

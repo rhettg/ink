@@ -261,6 +261,12 @@ init () {
     exit 1
   fi
 
+  # We allow ink to provide common variables
+  if [ $local_repo -ne 1 ] && [ -f ../.ink-env ]; then
+    cat ../.ink-env >> .ink-env
+  fi
+
+  # Everyone needs to know their name
   echo "TF_VAR_ink_name=${ink_name}" >> .ink-env
 
   save_env_args
