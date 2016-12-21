@@ -247,7 +247,7 @@ init () {
     ink_branch="ink-${ink_name}"
   fi
 
-  if [ $local_repo -ne 1 ]; then
+  if [ $local_repo -ne 1 ] && [ ! -d ${ink_name} ]; then
     # We actually keep a separate repo for each stack.
     # We could combine stacks for the same repo, but we'd have to sort out
     # concurrency issues. Doable. But skipping for now.
