@@ -9,7 +9,7 @@ repo="test_repo"
 destroy_local () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
   ink destroy ${name} &>/dev/null
 
   if git branch | grep ink-${name}; then
@@ -24,7 +24,7 @@ destroy_remote () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
-  name=$(ink_init ./$remote/A)
+  name=$(ink_add ./$remote/A)
 
   ink destroy ${name} &>/dev/null
 

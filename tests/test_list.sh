@@ -9,8 +9,8 @@ repo="test_repo"
 local_list () {
   enter_repo ${repo}
 
-  ink init . ink_id=foo >/dev/null
-  ink init . ink_id=bar >/dev/null
+  ink add . ink_id=foo >/dev/null
+  ink add . ink_id=bar >/dev/null
 
   repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then
@@ -25,8 +25,8 @@ remote_list () {
   build_remote_repo $remote "A"
   build_remote_repo $remote "B"
 
-  name=$(ink_init ./$remote/A)
-  name=$(ink_init ./$remote/B)
+  name=$(ink_add ./$remote/A)
+  name=$(ink_add ./$remote/B)
 
   repo_count=$(ink list | wc -l)
   if [ $repo_count -ne 2 ]; then

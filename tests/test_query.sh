@@ -8,7 +8,7 @@ repo="test_repo"
 
 enter_repo ${repo}
 
-name=$(ink_init .)
+name=$(ink_add .)
 
 ink apply ${name} &>/dev/null
 

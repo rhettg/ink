@@ -64,7 +64,7 @@ build_remote_repo () {
   cd ../..
 }
 
-ink_init () {
-  echo "$(ink init $@ | awk '{print $2}')"
+ink_add () {
+  echo "$(ink add $@ | awk '{print $2}')"
 }
 

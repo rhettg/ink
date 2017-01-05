@@ -6,10 +6,10 @@ repo="test_repo"
 
 . $(dirname $0)/util.sh
 
-init_local () {
+add_local () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -26,8 +26,8 @@ init_local () {
     exit 1
   fi
 
-  if ! git log --oneline | head -1 | grep "ink init" >/dev/null; then
-    err "Failed to find init commit"
+  if ! git log --oneline | head -1 | grep "ink add" >/dev/null; then
+    err "Failed to find add commit"
     git log --oneline
     exit 1
   fi
@@ -35,10 +35,10 @@ init_local () {
   exit_repo ${repo}
 }
 
-init_local_branch () {
+add_local_branch () {
   enter_repo ${repo}
 
-  name=$(ink_init . ink_id=fizz)
+  name=$(ink_add . ink_id=fizz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -62,8 +62,8 @@ init_local_branch () {
     exit 1
   fi
 
-  if ! git log --oneline | head -1 | grep "ink init" >/dev/null; then
-    err "Failed to find init commit"
+  if ! git log --oneline | head -1 | grep "ink add" >/dev/null; then
+    err "Failed to find add commit"
     git log --oneline
     exit 1
   fi
@@ -71,11 +71,11 @@ init_local_branch () {
   exit_repo ${repo}
 }
 
-init_remote () {
+add_remote () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
-  name=$(ink_init ./$remote/A)
+  name=$(ink_add ./$remote/A)
   if [ -z $name ]; then
     err "No name"
     exit 1
@@ -106,11 +106,11 @@ init_remote () {
   rm -rf $name
 }
 
-init_remote_branch () {
+add_remote_branch () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
-  name=$(ink_init ./$remote/A ink_id=foo)
+  name=$(ink_add ./$remote/A ink_id=foo)
   if [ -z $name ]; then
     err "No name"
     exit 1
@@ -149,10 +149,10 @@ init_remote_branch () {
   rm -rf $name
 }
 
-init_with_args () {
+add_with_args () {
   enter_repo ${repo}
 
-  name=$(ink_init . foo=fizz bar=buzz)
+  name=$(ink_add . foo=fizz bar=buzz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -181,14 +181,14 @@ init_with_args () {
   exit_repo ${repo}
 }
 
-init_remote_common_vars () {
+add_remote_common_vars () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
   echo "TF_VAR_foo=fizz" > .ink-env
   echo "TF_VAR_bar=bazz" >> .ink-env
 
-  name=$(ink_init ./$remote/A bar=zoo)
+  name=$(ink_add ./$remote/A bar=zoo)
   if [ -z $name ]; then
     err "No name"
     exit 1
@@ -218,10 +218,10 @@ init_remote_common_vars () {
   rm -rf $name
 }
 
-init_with_id () {
+add_with_id () {
   enter_repo ${repo}
 
-  name=$(ink_init . ink_id=fizz)
+  name=$(ink_add . ink_id=fizz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -235,10 +235,10 @@ init_with_id () {
   exit_repo ${repo}
 }
 
-init_with_name () {
+add_with_name () {
   enter_repo ${repo}
 
-  name=$(ink_init . ink_name=fizz)
+  name=$(ink_add . ink_name=fizz)
   if [ -z "$name" ]; then
     err "No name"
     exit 1
@@ -252,7 +252,7 @@ init_with_name () {
   exit_repo ${repo}
 }
 
-init_with_setup () {
+add_with_setup () {
   enter_repo ${repo}
 
   mkdir -p script
@@ -266,7 +266,7 @@ EOF
   git add script
   git commit -q -m "added setup script"
 
-  name=$(ink_init . foo=fizz)
+  name=$(ink_add . foo=fizz)
 
   if [ ! -f fizz.db ]; then
     err "setup didnt' run"
@@ -278,14 +278,14 @@ EOF
 
 setup
 
-init_local
-init_local_branch
-init_remote
-init_remote_branch
-init_with_args
-init_with_name
-init_with_id
-init_remote_common_vars
-init_with_setup
+add_local
+add_local_branch
+add_remote
+add_remote_branch
+add_with_args
+add_with_name
+add_with_id
+add_remote_common_vars
+add_with_setup
 
 teardown
