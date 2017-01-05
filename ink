@@ -37,7 +37,7 @@ local_repo=0
 export TF_INPUT=0
 
 help () {
-  echo "Usage: $(basename $0) <add|list|plan|apply|destroy|key|help>"
+  echo "Usage: $(basename $0) <add|list|output|plan|apply|destroy|key|help>"
   exit 1
 }
 
