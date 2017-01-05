@@ -20,8 +20,8 @@ repository then truly becomes the revision history of your infrastructure.
 For example, imagine you have a repository with terraform configuration
 in it. You need to tell ink to manage this repository:
 
-    $ ink init git@github.com:github/octobatman.git
-    Created octobatman
+    $ ink add git@github.com:github/octobatman.git
+    Added octobatman
 
 To use the terraform configurations provided in the repo:
 
@@ -82,8 +82,8 @@ and `staging`, and maybe even one-off experiments like `lab-abcd`.
 
 Ink can power this workflow by supporting multiple environments through branching.
 
-    $ ink init git@github.com:github/octobatman.git ink_id=production
-    Created octobatman-production
+    $ ink add git@github.com:github/octobatman.git ink_id=production
+    Added octobatman-production
 
 If you check your repo's origin, you'll see an important addition: A new branch
 named `ink-octobatman-production`.
@@ -94,8 +94,8 @@ multiple environments you have some more options.
 
 To test your change in an alternate environment first:
 
-    $ ink init github/octobatman ink_id=sg-fix-test
-    Created octobatman-sg-fix-test
+    $ ink add github/octobatman ink_id=sg-fix-test
+    Added octobatman-sg-fix-test
 
     $ ink apply octobatman-sg-fix-test
     Apply success!
@@ -120,12 +120,12 @@ Everything looks good, you can now merge the same change into production
 ## Environment Configuration
 
 Multiple environments will often need some configuration like user-defined
-variables to vary between environments.  When initializing a repo for multiple
+variables to vary between environments.  When adding a repo for multiple
 environments, you can include additional values to be passed along as terraform
 vars. For example:
 
-    $ ink init git@github.com:github/octobatman.git id=staging vpc_id=vpc-abc1234
-    Created octobatman-staging
+    $ ink add git@github.com:github/octobatman.git id=staging vpc_id=vpc-abc1234
+    Added octobatman-staging
 
 You can then access variables inside your terraform configs as they are passed
 to terraform as environment variables like `TF_VAR_vpc_id`.
@@ -140,7 +140,7 @@ There are also some useful built-in variables that can be used by your configura
 While ink is a wrapper around terraform, not all commands are implemented. They
 don't always make sense in a remote context.
 
-  * `ink init <git repository>` - Clone a repository and configure a new ink branch.
+  * `ink add <git repository>` - Clone a repository and configure a new ink branch.
   * `ink refresh <name> []` - Run `terraform refresh`
   * `ink plan <name> [branch]` - Generate a plan file for any changes in the branch.
   * `ink apply <name> [rev]` - Apply changes in the branch, using a plan file if available.
@@ -152,7 +152,7 @@ don't always make sense in a remote context.
 
 Ink supports user-defined scripts, similiar to the [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all) Concept.
 
-  * `script/setup` - If it exists and is executable, ink will automatically execute it during `init`
+  * `script/setup` - If it exists and is executable, ink will automatically execute it during `add`
   * `script/update` - If exists and is executable, ink will automatically execute it before anything mutable action.
 
 ## Installation
@@ -180,7 +180,7 @@ yourself. Ink is also going to ignore if the repo has a remote at all.
 
 Run ink from inside the repository starting with:
 
-    $ ink init .
+    $ ink add .
 
 ### TODO
 

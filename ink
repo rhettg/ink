@@ -37,7 +37,7 @@ local_repo=0
 export TF_INPUT=0
 
 help () {
-  echo "Usage: $(basename $0) <init|list|plan|apply|destroy|key|help>"
+  echo "Usage: $(basename $0) <add|list|plan|apply|destroy|key|help>"
   exit 1
 }
 
@@ -183,7 +183,7 @@ exit_repo () {
   fi
 }
 
-# During init, someone might have specified and override for the name. Extract it here.
+# During add, someone might have specified and override for the name. Extract it here.
 load_env_args_name () {
   for arg in $env_args; do
     if [[ "$arg" =~ ink_name=(.+) ]]; then
@@ -213,9 +213,9 @@ export_env_args () {
   fi
 }
 
-# Initialize the specified git repository for use with a new ink stack
-# This will mean cutting a new branch and putting all the right stuff in it.
-init () {
+# Add and initialize the specified git repository for use with a new ink stack
+# This may mean cutting a new branch and putting all the right stuff in it.
+add () {
   # heh
   local remote=$1
 
@@ -287,8 +287,8 @@ init () {
     fi
   fi
 
-  if ! git commit -q -m "ink init"; then
-    err "Failed to commit ink init"
+  if ! git commit -q -m "ink add"; then
+    err "Failed to commit ink add"
     exit 1
   fi
 
@@ -296,7 +296,7 @@ init () {
     git push -q -u origin "${branch}" &> /dev/null
   fi
 
-  echo "Created ${ink_name}"
+  echo "Added ${ink_name}"
 
   exit_repo
 }
@@ -622,11 +622,11 @@ cmd="$1"
 shift
 
 case $cmd in
-init)
+add)
   repo=$1
   shift
   env_args="$*"
-  init "$repo"
+  add "$repo"
   ;;
 destroy)
   ink_name=$1

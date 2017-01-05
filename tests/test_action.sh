@@ -9,7 +9,7 @@ repo="test_repo"
 success_apply () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
   ink apply ${name} &>/dev/null
 
   if [ ! -f state.db ]; then
@@ -29,7 +29,7 @@ success_apply () {
 success_apply_merge () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
 
   git checkout -q -b a-change
   touch change.txt
@@ -61,7 +61,7 @@ success_apply_merge () {
 success_apply_merge_sha () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
 
   git checkout -q -b a-change
   touch change.txt
@@ -100,7 +100,7 @@ success_apply_merge_sha () {
 failed_apply () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
 
   export INK_TEST_EXIT=1
 
@@ -130,7 +130,7 @@ remote_success () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
-  name=$(ink_init ./$remote/A)
+  name=$(ink_add ./$remote/A)
   ink apply ${name} &>/dev/null
 
   cd ${name}
@@ -166,7 +166,7 @@ remote_merge () {
   local remote=$(build_remote)
   build_remote_repo $remote "A"
 
-  name=$(ink_init ./$remote/A)
+  name=$(ink_add ./$remote/A)
 
   ink apply ${name} &>/dev/null
 
@@ -208,7 +208,7 @@ EOF
   git add script
   git commit -q -m "added setup script"
 
-  name=$(ink_init . foo=fizz)
+  name=$(ink_add . foo=fizz)
 
   if ! ink apply ${name} &>/dev/null; then
     err "apply failed"
@@ -226,7 +226,7 @@ EOF
 success_plan_merge () {
   enter_repo ${repo}
 
-  name=$(ink_init .)
+  name=$(ink_add .)
 
   git checkout -q -b a-change
   touch change.txt
