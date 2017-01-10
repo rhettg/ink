@@ -56,7 +56,7 @@ extract_repo_name () {
   if [[ "$1" =~ $regex ]]; then
     echo "${BASH_REMATCH[1]}"
   else
-    echo $(basename $1)
+    echo "$( basename $1 )"
   fi
 }
 
